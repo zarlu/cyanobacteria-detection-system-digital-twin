@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "node_id": "node-intake",
+  "source": "simulator",
+  "sent_at": "2026-10-10T15:04:05Z",
+  "firmware": "sim-0.1.0",
+  "readings": [
+    {"ts": "2026-10-10T14:00:00Z", "channel": "phosphate_po4", "value": 0.22, "unit": "mg/L", "kind": "label", "meta": {"emulates": "HI713", "sample_id": "S-0042"}},
+    {"ts": "2026-10-01T12:00:00Z", "channel": "chlorophyll_a", "value": 6.5, "unit": "ug/L", "kind": "label", "meta": {"emulates": "CRP"}},
+    {"ts": "2026-10-01T12:00:00Z", "channel": "total_phosphorus", "value": 0.072, "unit": "mg/L", "kind": "label", "meta": {"emulates": "CRP"}},
+    {"ts": "2026-10-10T15:00:00Z", "channel": "discharge", "value": 85.0, "unit": "m3/s", "kind": "external", "meta": {"emulates": "IBWC", "original_unit": "cfs"}},
+    {"ts": "2026-10-10T15:00:00Z", "channel": "precip", "value": 0.0, "unit": "mm", "kind": "external", "meta": {"emulates": "weather", "interval_min": 60}}
+  ]
+}

@@ -1,0 +1,147 @@
+# Simulator scenarios. EVERYTHING here is an assumption of ours chosen to exercise the pipeline,
+# not a Rio Grande fact (CLAUDE.md rule 5 and 10). Units: temperatures degC, discharge m3/s,
+# turbidity NTU, tds ppm, phosphate mg/L as PO4 unless the key says `as_p`, chlorophyll ug/L.
+# `defaults` applies to every scenario; a scenario overrides keys (deep merge).
+schema_version: 1
+
+defaults:
+  description: "defaults shared by every scenario"
+  water_temp:
+    mean: 22.0            # annual mean, upstream
+    season_amp: 4.0       # amplitude of the annual cosine (damped on purpose)
+    peak_doy: 200         # day of year of the warmest water
+    diurnal_amp: 0.8      # amplitude of the daily cosine
+    diurnal_peak_hour_utc: 22   # about 16:00-17:00 in America/Chicago
+    downstream_delta: 0.8 # downstream is warmer (effluent, shallower reach)
+    noise_sd: 0.12        # AR(1) noise per step
+    ar: 0.9
+  air_temp:
+    mean: 24.0
+    season_amp: 9.0
+    peak_doy: 200
+    diurnal_amp: 6.0
+    diurnal_peak_hour_utc: 21   # about 15:00-16:00 in America/Chicago
+    noise_sd: 0.8
+    ar: 0.8
+  storms:
+    rate_per_day: 0.06            # Poisson rate of storm starts outside the window
+    window_days: null             # [start_day, end_day] with `window_rate_per_day` inside
+    window_rate_per_day: null
+    duration_h: [3, 12]           # uniform
+    intensity_mm_h: [2, 12]       # uniform
+    runoff_m3s_per_mm: 2.5        # peak discharge added per mm of storm total
+    rise_h: 6.0                   # linear rise to the peak
+    recession_tau_h: 48.0         # exponential recession after the peak
+  discharge:
+    base_m3s: 80.0
+    noise_frac: 0.02
+    ar: 0.95
+    floor_frac: 0.2               # Q never drops below floor_frac * base (keeps Q > 0)
+  turbidity:
+    base_ntu: 25.0
+    per_m3s: 1.2                  # NTU per m3/s above base discharge
+    lag_h: 6.0                    # turbidity lags the discharge pulse
+    slow_amp_ntu: 5.0             # slow baseline wobble
+    slow_period_d: 30.0
+    downstream_add_ntu: 3.0
+    noise_ntu: 1.5
+  tds:
+    base_ppm: 450.0
+    dilution_exp: 0.5             # tds = base * (Qbase/Q)^exp
+    effluent_ppm: 900.0
+    noise_ppm: 4.0
+  effluent:
+    q_m3s: 0.5
+    diurnal_frac: 0.2             # WWTF flow swings +/- this fraction over the day
+    tp_mg_l_as_p: 1.0             # effluent total phosphorus as P before any step
+    dissolved_frac: 0.8           # share of effluent P that is dissolved PO4
+    step_day: null                # day index at which tp jumps to step_tp_mg_l_as_p (null = never)
+    step_tp_mg_l_as_p: null
+  phosphate:
+    background_po4: 0.08          # upstream dissolved phosphate as PO4
+    storm_release_po4: 0.15       # extra PO4 per unit of (Q - Qbase)/Qbase during storms
+    noise_po4: 0.008
+  chlorophyll:
+    initial_ug_l: 2.0
+    r_max_per_day: 0.6            # growth rate at temp_ref with saturating phosphate
+    temp_ref: 25.0
+    temp_k: 0.10                  # growth scales with exp(temp_k * (T - temp_ref))
+    half_sat_po4: 0.30            # Monod half-saturation for phosphate (as PO4)
+    mortality_per_day: 0.25
+    flush_q_m3s: 200.0            # above this discharge the bloom is flushed
+    flush_per_day: 1.0            # extra loss per unit of (Q/flush_q - 1)
+    carrying_ug_l: 60.0           # logistic cap
+    min_ug_l: 0.5
+  ph:
+    base: 7.9
+    diurnal_amp: 0.12             # peaks with the water temperature (diurnal_peak_hour_utc)
+    chl_coupling: 0.03            # diurnal amplitude grows with chlorophyll (per ug/L)
+    chl_offset: 0.02              # mean pH rises with chlorophyll (per 10 ug/L)
+    noise_sd: 0.02
+  sensors:                        # measurement noise of the node sensors (sd)
+    water_temp: 0.05
+    ph: 0.02
+    tds: 3.0
+    turbidity: 1.0
+    raw_v_noise: 0.004
+    tds_every_steps: 4            # firmware spaces TDS reads (pH interference)
+  analyzer:
+    node_role: downstream
+    cycle_min: 90
+    ref_every: 8
+    eps_au_per_mg_l: 0.25         # Beer-Lambert slope (A per mg/L as PO4)
+    a0_au: 0.02                   # blank absorbance
+    led_v: 3.0
+    led_decay_per_day: 0.001
+    noise_au: 0.003
+    ref_walk_sd_au: 0.004         # reference-run drift per reference run
+    ref_drift_threshold_au: 0.03  # |drift| above this marks cycles bad (reason ref_drift)
+  labels:
+    grab_per_week: [2, 3]         # HI713 grab samples per sampled node per week (uniform int)
+    grab_hours_utc: [14, 22]      # sampling window (daytime in America/Chicago)
+    hi713_abs_ppm: 0.04           # +/- 0.04 ppm ...
+    hi713_rel: 0.04               # ... +/- 4 % (uniform error inside the bound)
+    hi713_max_ppm: 2.5            # readings above are censored at 2.5
+    crp_day_of_month: 15
+    crp_hour_utc: 16
+    tp_over_po4_as_p: 1.25        # total P (as P) = 0.3261 * PO4 * this ratio
+    tp_noise_rel: 0.05
+    chl_noise_rel: 0.08
+    dense_weekday: 0              # Monday weekly chlorophyll_a with --dense-labels
+  bench:
+    water_temp: 23.0
+    air_coupling: 0.1
+    ph: 7.6
+    tds: 300.0
+    turbidity: 3.0
+  faults: {}                      # see sensor_faults for every fault type and its parameters
+
+scenarios:
+  baseline:
+    description: "Quiet river: damped seasonal cycle, few storms, low phosphate, no bloom, no faults."
+  summer_bloom:
+    description: "Hot, low flow, elevated phosphate: chlorophyll grows past 10 ug/L. Light faults."
+    water_temp: {mean: 29.0, season_amp: 2.0}
+    air_temp: {mean: 31.0, season_amp: 3.0}
+    discharge: {base_m3s: 40.0}
+    storms: {rate_per_day: 0.03}
+    phosphate: {background_po4: 0.35}
+    faults:
+      ph_settling: {}
+      spikes: {rate_per_day: 0.15, channels: [water_temp, turbidity, tds], step_multiple: [1.5, 4.0]}
+  effluent_step:
+    description: "Effluent total phosphorus steps from 1.0 to 2.82 mg/L as P on day 30 (permit value)."
+    effluent: {step_day: 30, step_tp_mg_l_as_p: 2.82}
+  storm_week:
+    description: "A week of storms (days 30 to 37): discharge pulses, turbidity and phosphate release."
+    storms: {window_days: [30, 37], window_rate_per_day: 1.2, intensity_mm_h: [5, 20]}
+  sensor_faults:
+    description: "Every fault type, for QC and outage tests."
+    faults:
+      turbidity_drift: {node_role: intake, ntu_per_8h: 40.0, cleaning_weekday: 0, cleaning_hour_utc: 15}
+      ph_settling: {dip: -0.3, settle_min: 10}
+      wifi_outage: {node_role: downstream, episodes: 2, duration_h: 6, duplicate_frac: 0.1}
+      stuck: {episodes: 3, duration_h: 6, channels: [water_temp, tds]}
+      spikes: {rate_per_day: 0.5, channels: [water_temp, turbidity, tds], step_multiple: [1.5, 4.0]}
+      analyzer_ref_drift: {start_day: 7, duration_days: 4, drift_au_per_ref: 0.05}
+      node_silent: {node_role: intake, start_day: 10, duration_h: 6}

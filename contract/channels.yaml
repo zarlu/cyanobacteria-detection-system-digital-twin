@@ -1,0 +1,168 @@
+# Channel registry: the single source of truth for channel names, canonical units, default kind,
+# QC ranges and step limits (CLAUDE.md section 5). Valid ranges and step limits are PLACEHOLDERs
+# to tune on real data. `max_step_15min: null` means no spike check. `stuck_after` is set only on
+# continuous node-sensor channels: that many consecutive identical values is flagged `stuck`.
+# Units: `phosphate_po4` is mg/L as PO4; `total_phosphorus` is mg/L as P (1 mg/L PO4 = 0.3261 mg/L P).
+schema_version: 1
+channels:
+  water_temp:
+    unit: degC
+    default_kind: measurement
+    valid_min: 0
+    valid_max: 45
+    max_step_15min: 3
+    stuck_after: 12
+    description: "Water temperature (DS18B20). PLACEHOLDER range."
+  ph:
+    unit: pH
+    default_kind: measurement
+    valid_min: 4
+    valid_max: 11
+    max_step_15min: 1.0
+    stuck_after: 12
+    description: "pH (DFRobot Gravity analog). Disturbed for >10 min after a TDS read; firmware flags `ph_settling`."
+  tds:
+    unit: ppm
+    default_kind: measurement
+    valid_min: 0
+    valid_max: 1000
+    max_step_15min: 200
+    stuck_after: 12
+    saturation_min: 950
+    description: "Total dissolved solids. Sensor tops out at 1000; >= saturation_min is flagged `saturated`."
+  turbidity:
+    unit: NTU
+    default_kind: measurement
+    valid_min: 0
+    valid_max: 1000
+    max_step_15min: 200
+    stuck_after: 12
+    description: "Turbidity. Sensors on order; one reviewed sensor drifted after about 8 h."
+  ph_raw_v:
+    unit: V
+    default_kind: measurement
+    valid_min: 0
+    valid_max: 5
+    max_step_15min: null
+    stuck_after: 12
+    description: "Raw ADC volts of the pH probe, kept for later recalibration."
+  tds_raw_v:
+    unit: V
+    default_kind: measurement
+    valid_min: 0
+    valid_max: 5
+    max_step_15min: null
+    stuck_after: 12
+    description: "Raw ADC volts of the TDS probe, kept for later recalibration."
+  turbidity_raw_v:
+    unit: V
+    default_kind: measurement
+    valid_min: 0
+    valid_max: 5
+    max_step_15min: null
+    stuck_after: 12
+    description: "Raw ADC volts of the turbidity sensor, kept for later recalibration."
+  flow_rate:
+    unit: L/min
+    default_kind: measurement
+    valid_min: 0
+    valid_max: 30
+    max_step_15min: null
+    stuck_after: null
+    description: "YF-S201 pipe flow at the node, not river discharge. Optional. No stuck check (0 while idle is normal)."
+  pressure:
+    unit: psi
+    default_kind: measurement
+    valid_min: 0
+    valid_max: 100
+    max_step_15min: 30
+    stuck_after: 12
+    description: "Pipe pressure. Optional; leak-detection scope undecided."
+  phosphate_po4:
+    unit: mg/L
+    default_kind: measurement
+    valid_min: 0
+    valid_max: 5
+    max_step_15min: 1.0
+    stuck_after: null
+    description: "Phosphate in mg/L AS PO4. Analyzer output (source=analyzer) or grab-sample label (source=HI713: reads 0 to 2.5, +/-0.04 +/-4%)."
+  analyzer_i0:
+    unit: V
+    default_kind: measurement
+    valid_min: 0
+    valid_max: 5
+    max_step_15min: null
+    stuck_after: null
+    description: "Analyzer photodiode reading on the reference (blank) path."
+  analyzer_i:
+    unit: V
+    default_kind: measurement
+    valid_min: 0
+    valid_max: 5
+    max_step_15min: null
+    stuck_after: null
+    description: "Analyzer photodiode reading on the sample path."
+  analyzer_absorbance:
+    unit: AU
+    default_kind: measurement
+    valid_min: 0
+    valid_max: 3
+    max_step_15min: null
+    stuck_after: null
+    description: "Absorbance A = -log10(I/I0) at about 375 nm (vanadomolybdate)."
+  analyzer_ref_drift:
+    unit: AU
+    default_kind: measurement
+    valid_min: -1
+    valid_max: 1
+    max_step_15min: null
+    stuck_after: null
+    description: "Reference-run absorbance change versus the previous reference run."
+  analyzer_led_level:
+    unit: V
+    default_kind: measurement
+    valid_min: 0
+    valid_max: 5
+    max_step_15min: null
+    stuck_after: null
+    description: "I0 light level on reference water (LED health)."
+  chlorophyll_a:
+    unit: ug/L
+    default_kind: label
+    valid_min: 0
+    valid_max: 500
+    max_step_15min: null
+    stuck_after: null
+    description: "Chlorophyll-a grab sample (CRP monthly or quarterly). Bloom alert level 10 ug/L."
+  total_phosphorus:
+    unit: mg/L
+    default_kind: label
+    valid_min: 0
+    valid_max: 10
+    max_step_15min: null
+    stuck_after: null
+    description: "Total phosphorus in mg/L AS P (CRP, permits). Convert from PO4 with 0.3261."
+  discharge:
+    unit: m3/s
+    default_kind: external
+    valid_min: 0
+    valid_max: 5000
+    max_step_15min: 500
+    stuck_after: null
+    description: "River discharge from the IBWC gauge. The connector converts and stores `meta.original_unit`."
+  air_temp:
+    unit: degC
+    default_kind: external
+    valid_min: -10
+    valid_max: 50
+    max_step_15min: 10
+    stuck_after: null
+    description: "Air temperature (weather source)."
+  precip:
+    unit: mm
+    default_kind: external
+    valid_min: 0
+    valid_max: 300
+    max_step_15min: null
+    stuck_after: null
+    description: "Precipitation per interval; interval length in `meta.interval_min`."

@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "node_id": "node-downstream",
+  "source": "analyzer",
+  "sent_at": "2026-10-10T09:35:00-06:00",
+  "firmware": "analyzer-0.2.0",
+  "readings": [
+    {"ts": "2026-10-10T09:30:00-06:00", "channel": "phosphate_po4", "value": 0.31, "unit": "mg/L", "meta": {"cycle_id": 118}},
+    {"ts": "2026-10-10T09:30:00-06:00", "channel": "analyzer_i0", "value": 2.91, "unit": "V", "meta": {"cycle_id": 118}},
+    {"ts": "2026-10-10T09:30:00-06:00", "channel": "analyzer_i", "value": 2.44, "unit": "V", "meta": {"cycle_id": 118}},
+    {"ts": "2026-10-10T09:30:00-06:00", "channel": "analyzer_absorbance", "value": 0.0766, "unit": "AU", "meta": {"cycle_id": 118}},
+    {"ts": "2026-10-10T09:30:00-06:00", "channel": "analyzer_ref_drift", "value": 0.004, "unit": "AU", "meta": {"cycle_id": 118, "is_reference_run": true}}
+  ]
+}

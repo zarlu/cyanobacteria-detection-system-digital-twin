@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "node_id": "node-intake",
+  "source": "sensor",
+  "sent_at": "2026-10-10T15:04:05Z",
+  "firmware": "0.1.0",
+  "readings": [
+    {"ts": "2026-10-10T15:04:00Z", "channel": "water_temp", "value": 27.4, "unit": "degC", "quality": "good", "kind": "measurement", "meta": {}},
+    {"ts": "2026-10-10T15:04:00Z", "channel": "ph", "value": 7.9, "unit": "pH", "quality": "suspect", "meta": {"reason": "ph_settling"}},
+    {"ts": "2026-10-10T15:04:00Z", "channel": "tds", "value": 412, "unit": "ppm"},
+    {"ts": "2026-10-10T15:04:00Z", "channel": "tds_raw_v", "value": 1.37, "unit": "V"}
+  ]
+}

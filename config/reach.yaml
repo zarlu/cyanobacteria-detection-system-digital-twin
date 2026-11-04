@@ -1,0 +1,35 @@
+# Reach configuration: nodes in river order (increasing river_km = downstream).
+# EVERY coordinate, distance and name below is a PLACEHOLDER (CLAUDE.md section 2 rule 10 and
+# section 11). The two-site design is not fixed; physical node locations are an open question.
+schema_version: 1
+river: "PLACEHOLDER: Rio Grande near Laredo, TX"
+nodes:
+  - node_id: node-intake
+    name: "PLACEHOLDER: node near the Laredo water-plant intake (near IBWC CRP station 13202)"
+    role: intake
+    lat: null          # PLACEHOLDER
+    lon: null          # PLACEHOLDER
+    river_km: 0.0      # PLACEHOLDER: reference point of the reach
+    notes: "PLACEHOLDER: intakes appear to sit upstream of the main effluent inputs (inference to verify)"
+  - node_id: effluent-zacate
+    name: "PLACEHOLDER: Zacate Creek WWTF effluent input"
+    role: effluent_input
+    lat: null          # PLACEHOLDER
+    lon: null          # PLACEHOLDER
+    river_km: 5.0      # PLACEHOLDER
+    notes: "2020 permit application: 2.82 mg/L total phosphorus (as P), 21.4 mg/L NH3-N (CLAUDE.md section 11)"
+  - node_id: node-downstream
+    name: "PLACEHOLDER: node below the effluent inputs"
+    role: downstream
+    lat: null          # PLACEHOLDER
+    lon: null          # PLACEHOLDER
+    river_km: 10.0     # PLACEHOLDER
+    notes: "PLACEHOLDER: hosts the phosphate analyzer (source=analyzer)"
+  - node_id: node-bench
+    name: "Bench test node (lab bucket)"
+    role: bench
+    lat: null
+    lon: null
+    river_km: null     # not on the river
+    notes: "Lab bench node for KH2PO4 spike tests and the bench pump demo"
+effluent_input: effluent-zacate

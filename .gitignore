@@ -1,0 +1,27 @@
+# environment / secrets
+.env
+.venv/
+venv/
+
+# runtime state and data (never committed)
+data/
+artifacts/
+.run/
+sim_out/
+
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+build/
+dist/
+
+# streamlit
+.streamlit/secrets.toml
+
+# os / editors
+.DS_Store
+.idea/
+.vscode/
