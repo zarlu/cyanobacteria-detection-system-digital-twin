@@ -9,10 +9,6 @@ dashboard shows data, forecasts and alerts.
 hardware. Everything it produces is labeled `source='simulator'` and is **pipeline validation only,
 not river performance**. The simulator's physics are the team's assumptions, not Rio Grande facts.
 
-The rulebook for every Claude Code session on this repository is [CLAUDE.md](CLAUDE.md). New
-teammates: start with [docs/HANDOFF.md](docs/HANDOFF.md) (repo map, how to add things, measured
-limitations, suggested split of the next phases) and [docs/ASSUMPTIONS.md](docs/ASSUMPTIONS.md).
-
 ## Status
 
 | Phase | Content | State |
