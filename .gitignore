@@ -25,3 +25,6 @@ dist/
 .DS_Store
 .idea/
 .vscode/
+
+# claude code rulebook (local only)
+CLAUDE.md

@@ -107,11 +107,6 @@ curl -s -X POST localhost:8000/labels/csv -H "X-API-Key: dev-key-change-me" -F f
 Queries that would touch more than 200,000 rows return 413; narrow the range or filter by node
 and channel. Server QC (ranges, spikes, stuck values, TDS saturation) can only downgrade quality.
 
-## Layout
-
-See CLAUDE.md section 4. Each top-level folder has a README saying what lives there and who owns it.
-Folders `ml/`, `alerts/`, `connectors/`, `firmware/` are stubs until their phases start.
-
 ## Environment
 
 `make setup` copies `.env.example` to `.env` when missing. `API_KEY` is required by the API and the
