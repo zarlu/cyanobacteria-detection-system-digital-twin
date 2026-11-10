@@ -4,7 +4,7 @@
 venv/
 
 # runtime state and data (never committed)
-data/
+/data/
 artifacts/
 .run/
 sim_out/
