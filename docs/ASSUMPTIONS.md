@@ -223,3 +223,66 @@ restored, passed. (e) simulator determinism: `SeedSequence(seed)` -> `SeedSequen
 ## Blockers
 
 None so far.
+
+## Phase 4a: real CRP data (recorded 2026-11-09)
+
+Decisions for `ml/data/crp.py` (inspect, clean, manifest, verify). Scope for this task was set by
+the repository owner: `ml/data/`, `tests/ml/`, `docs/crp_schema.md` and this file (append only).
+
+- **Sample time convention.** CRP dates have no time of day. Each is stored as that date at
+  **18:00:00 UTC** (about midday US Central; the real sample time is unknown) with
+  `meta.date_only=true`. Set in `ml/data/crp_mapping.yaml` (`date.stored_time_utc`).
+- **Two-digit years:** yy >= 70 is 19yy, otherwise 20yy (PLACEHOLDER pivot in the mapping; the
+  three files span 1995 to 2026).
+- **Real data supports "predict the next sample", not a 7-day forecaster.** Nothing is
+  interpolated, resampled or synthesized between samples; every row has `source='CRP'`.
+- **Units.** Specific conductance: the header says S/cm, values are stored as uS/cm (middle of the
+  data is roughly 600 to 1300; see `docs/crp_schema.md`). Flow: ft3/s x 0.0283168 = m3/s, original
+  unit in `meta.original_unit`, original number in `value_raw`. Ortho-phosphorus stays
+  `crp_ortho_phosphorus` with basis PLACEHOLDER (not mapped to `phosphate_po4`). Kjeldahl-N and
+  the two bacteria columns have unit PLACEHOLDER. Lab TDS is `crp_tds_lab`, not the sensor `tds`.
+- **Kind.** `chlorophyll_a` and `total_phosphorus` are `label`; every other CRP column is
+  `measurement`, including `discharge` and `air_temp` (the contract's default kind for those two
+  channels is `external`, which describes IBWC gauge and weather feeds, not a grab-sample reading).
+- **Censored values.** Left-censored (`<x`): `value = x / 2`, `detection_limit = x`,
+  `censored=left`. Right-censored (`>x`): `value = x`, `detection_limit = x`, `censored=right`
+  (the brief defined only the left case). `value_raw` always keeps the original text. A `<10`
+  chlorophyll label therefore counts as below the 10 ug/L event level.
+- **Screening rules** (`ml/data/crp_qc.yaml`, all PLACEHOLDER heuristics): range checks compare the
+  number as written in the file and apply to plain numeric cells only, not censored ones. A flag
+  sets `quality='suspect'` and keeps the value; `bad` is never assigned by this task.
+- **Out-of-sequence dates:** a row is quarantined when its date lies outside
+  [previous row, next row] while previous <= next. The first and last row of a file have one
+  neighbour and are never quarantined by this rule; any remaining order break is listed in the
+  report. No year is ever guessed.
+- **Duplicate blocks** are compared within one station only; the block on the later date is
+  flagged. A quarantined out-of-sequence row is still compared, for the report.
+- **Same-date merge:** the first row's value wins. A different value on a later row goes to
+  `crp_quarantine.csv` (`conflicting_duplicate`); an identical value goes there too
+  (`duplicate_same_value`) so that every parsed cell is accounted for exactly once.
+- **Extra output columns** beyond the brief, agreed with the owner: `crp_long.csv` has a trailing
+  `meta` column (JSON: `date_only`, `original_unit`); `crp_quarantine.csv` has `column`,
+  `value_raw` and `n_cells` so a single quarantined value and the conservation check are
+  expressible.
+- **Text cells on a quarantined row** are recorded in `crp_notes.csv` like any other text cell;
+  the quarantine entry counts only its numeric and censored cells.
+- **Corrections** (`ml/data/crp_corrections.yaml`, empty) are human decisions, not QC:
+  `confirm_ok` and `replace` set `quality='good'` with `flag_reason` `confirmed_ok` / `corrected`
+  (`value_raw` keeps the file text); `drop` moves the value to the quarantine file. An entry
+  without evidence, or one that matches no value, stops the run.
+- **Profile** (`data/clean/crp_profile.json`): `quality='good'` rows only; censored values enter at
+  their stored value; "pooled" is all stations together and pooled gaps are the per-station gaps
+  concatenated; percentiles use linear interpolation between order statistics (a statistic of the
+  observed values, not interpolation between samples); a cell with n < 5 is null.
+- **File-name check** ignores hidden dot-files (for example `.DS_Store`) in `data/raw/crp/`.
+- **xlrd not needed:** `data/raw/crp/` holds only CSV files, so `pyproject.toml` is unchanged.
+  The `.xlsx` path uses openpyxl (ML extra); its test is skipped when openpyxl is not installed.
+- **`.gitignore` line `data/` also matches `ml/data/`.** The owner chose not to edit `.gitignore`
+  in this task, so the `ml/data/` files are committed with `git add -f`. Consequences until the
+  line becomes `/data/`: new files in `ml/data/` need `git add -f`, and `make lint` (ruff respects
+  `.gitignore`) does not check `ml/data/*.py`; run `uv run ruff check ml/data/*.py` explicitly.
+- **Reference count not reproduced:** the brief expected 15 of 21 rows dated 2025 or later at
+  15816 without field readings. The file has 11 rows dated 2025 or later (lines 171 to 181), 5 of
+  them without numeric water temp, pH or flow. Neither side was adjusted.
+
+Blockers (Phase 4a): none.

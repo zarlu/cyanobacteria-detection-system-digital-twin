@@ -1,0 +1,213 @@
+# CRP export mapping: source column -> canonical channel, unit and kind, plus station metadata.
+# Read by ml/data/crp.py. Nothing about stations, columns or units is hard-coded in Python
+# (CLAUDE.md rule 11). Anything not confirmed by a document is marked PLACEHOLDER (rule 10).
+#
+# Column matching: a header cell is normalized (text in parentheses removed, lowercased, every
+# run of punctuation or spaces collapsed to one space) and looked up in `columns[].header`.
+# A header that is not listed here stops the run with an error naming it.
+version: 1
+source: CRP
+file_pattern: '^\d{5}\.(csv|xls|xlsx)$'   # the station id comes only from the file name
+node_id_template: "crp-{station}"
+
+date:
+  header: "date"                 # must be the first column
+  two_digit_year_pivot: 70       # PLACEHOLDER: yy >= 70 -> 19yy, else 20yy (files span 1995 to 2026)
+  stored_time_utc: "18:00:00"    # dates have no time of day; see docs/ASSUMPTIONS.md
+  meta:
+    date_only: true
+
+missing_markers: ["", "\\"]      # blank and backslash both mean "no value"
+
+# First-cell labels (normalized like headers) of rows that are not data.
+footer:
+  summary_rows: ["average", "standard"]
+  disclaimer_rows: ["data not qapp approved", "not reportable to tceq"]
+
+stations:
+  "13202":
+    description: "Rio Grande at Laredo WTP pump intake"
+    description_source: "IBWC CRP station page (as given by the repository owner; URL PLACEHOLDER)"
+    lat: PLACEHOLDER
+    lon: PLACEHOLDER
+  "15816":
+    description: "Rio Grande at Rio Bravo, 0.5 km downstream of El Cenizo"
+    description_source: "IBWC CRP station page (as given by the repository owner; URL PLACEHOLDER)"
+    lat: PLACEHOLDER
+    lon: PLACEHOLDER
+  "17410":
+    description: "Rio Grande below World Trade Bridge"
+    description_source: "IBWC CRP station page (as given by the repository owner; URL PLACEHOLDER)"
+    lat: PLACEHOLDER
+    lon: PLACEHOLDER
+
+# One entry per source column, in file order.
+#   header        normalized header text
+#   channel       contract channel only when it is the same physical quantity, else crp_<name>
+#   unit          unit of the stored value
+#   source_unit   unit as written in the file, when it differs (kept as meta.original_unit)
+#   factor        stored value = file value * factor
+#   kind          label | measurement
+#   note          unit assumptions
+columns:
+  - header: "flow"
+    channel: discharge
+    unit: "m3/s"
+    source_unit: "ft3/s"
+    factor: 0.0283168
+    kind: measurement
+  - header: "water depth"
+    channel: crp_water_depth
+    unit: "m"
+    kind: measurement
+  - header: "days since last precip"
+    channel: crp_days_since_precip
+    unit: "d"
+    kind: measurement
+  - header: "air temp"
+    channel: air_temp
+    unit: "degC"
+    kind: measurement
+  - header: "water temp"
+    channel: water_temp
+    unit: "degC"
+    kind: measurement
+  - header: "dissolved oxygen"
+    channel: crp_dissolved_oxygen
+    unit: "mg/L"
+    kind: measurement
+  - header: "ph"
+    channel: ph
+    unit: "pH"
+    kind: measurement
+  - header: "secchi disc"
+    channel: crp_secchi_depth
+    unit: "m"
+    kind: measurement
+  - header: "fecal coliform"
+    channel: crp_fecal_coliform
+    unit: PLACEHOLDER
+    kind: measurement
+    note: "Count per 100 mL (header says #/100ml); method and unit (CFU or MPN) PLACEHOLDER."
+  - header: "e coli"
+    channel: crp_e_coli
+    unit: PLACEHOLDER
+    kind: measurement
+    note: "Count per 100 mL (one header says #/100, two give no unit); CFU or MPN PLACEHOLDER."
+  - header: "specific conductance"
+    channel: crp_specific_conductance
+    unit: "uS/cm"
+    kind: measurement
+    note: "Header says S/cm; the values are read as microsiemens per cm (see crp_schema.md)."
+  - header: "chloride"
+    channel: crp_chloride
+    unit: "mg/L"
+    kind: measurement
+  - header: "sulfate"
+    channel: crp_sulfate
+    unit: "mg/L"
+    kind: measurement
+  - header: "alkalinity"
+    channel: crp_alkalinity
+    unit: "mg/L"
+    kind: measurement
+    note: "Basis (as CaCO3?) PLACEHOLDER."
+  - header: "total hardness"
+    channel: crp_total_hardness
+    unit: "mg/L"
+    kind: measurement
+    note: "Basis (as CaCO3?) PLACEHOLDER."
+  - header: "bod"
+    channel: crp_bod
+    unit: "mg/L"
+    kind: measurement
+  - header: "total suspended solids"
+    channel: crp_tss
+    unit: "mg/L"
+    kind: measurement
+  - header: "volatile suspended solids"
+    channel: crp_vss
+    unit: "mg/L"
+    kind: measurement
+  - header: "total dissolved solids"
+    channel: crp_tds_lab          # lab TDS; deliberately NOT the sensor channel `tds`
+    unit: "mg/L"
+    kind: measurement
+  - header: "total organic carbon"
+    channel: crp_toc
+    unit: "mg/L"
+    kind: measurement
+  - header: "ammonia as n"
+    channel: crp_ammonia_n
+    unit: "mg/L"
+    kind: measurement
+  - header: "nitrate nitrite"
+    channel: crp_nitrate_nitrite
+    unit: "mg/L"
+    kind: measurement
+    note: "Basis (as N?) PLACEHOLDER."
+  - header: "kjeldahl n"
+    channel: crp_kjeldahl_n
+    unit: PLACEHOLDER
+    kind: measurement
+    note: "No unit in the header (mg/L as N?) PLACEHOLDER."
+  - header: "total phosphorus"
+    channel: total_phosphorus     # mg/L as P (CLAUDE.md rule 9)
+    unit: "mg/L"
+    kind: label
+  - header: "ortho phosphorus"
+    channel: crp_ortho_phosphorus # NOT phosphate_po4 (that channel is mg/L as PO4)
+    unit: "mg/L"
+    kind: measurement
+    note: "Basis (as P or as PO4) PLACEHOLDER until confirmed."
+  - header: "chlorophyll a"
+    channel: chlorophyll_a
+    unit: "ug/L"
+    kind: label
+  - header: "pheophytin a"
+    channel: crp_pheophytin_a
+    unit: "ug/L"
+    kind: measurement
+  - header: "total calcium"
+    channel: crp_total_calcium
+    unit: "mg/L"
+    kind: measurement
+  - header: "total magnesium"
+    channel: crp_total_magnesium
+    unit: "mg/L"
+    kind: measurement
+  - header: "total potassium"
+    channel: crp_total_potassium
+    unit: "mg/L"
+    kind: measurement
+  - header: "total sodium"
+    channel: crp_total_sodium
+    unit: "mg/L"
+    kind: measurement
+  - header: "total fluoride"
+    channel: crp_total_fluoride
+    unit: "mg/L"
+    kind: measurement
+  - header: "total silica"
+    channel: crp_total_silica
+    unit: "mg/L"
+    kind: measurement
+
+# Settings for crp_profile.json and crp_cleaning_report.md (statistics of real samples only).
+profile:
+  min_n: 5                       # a statistic with fewer values than this is written as null
+  event:
+    channel: chlorophyll_a
+    threshold: 10                # ug/L, the chlorophyll alert level in CLAUDE.md section 8
+  seasons:
+    apr_sep: [4, 5, 6, 7, 8, 9]
+    oct_mar: [10, 11, 12, 1, 2, 3]
+  monthly_channels:
+    - water_temp
+    - discharge
+    - chlorophyll_a
+    - total_phosphorus
+    - ph
+    - crp_specific_conductance
+  companion_channels: [water_temp, ph, discharge]   # same-day readings a label is checked for
+  recent_from: "2025-01-01"      # "newest rows" section of the cleaning report

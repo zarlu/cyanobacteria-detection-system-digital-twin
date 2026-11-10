@@ -1,0 +1,10 @@
+# Human-confirmed corrections to CRP values. Nothing here is ever written automatically.
+# Each entry needs every field below; an entry without non-empty `evidence` is refused.
+#
+#   - station: "13202"
+#     date: "2021-07-26"            # ISO date of the sample
+#     channel: crp_specific_conductance
+#     action: replace               # replace | confirm_ok | drop
+#     value: 890                    # required for replace, in the unit written in the file
+#     evidence: "who confirmed it, when, and from which document"
+corrections: []

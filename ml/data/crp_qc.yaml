@@ -1,0 +1,95 @@
+# CRP screening rules, read by ml/data/crp.py.
+# EVERY threshold in this file is a PLACEHOLDER: a screening heuristic to tune, not a physical
+# limit and not a regulatory standard. A hit marks a value `suspect`; the value is kept, never
+# deleted and never corrected. Only whole rows with an unusable date are quarantined.
+version: 1
+
+# Value-level range checks. `min` / `max` are compared with the number as written in the file
+# (source unit, before any conversion). Only plain numeric cells are checked (not censored ones).
+range_rules:
+  - channel: water_temp
+    min: 2        # PLACEHOLDER screening heuristic to tune (degC)
+    max: 38       # PLACEHOLDER screening heuristic to tune (degC)
+    reason: out_of_range
+  - channel: ph
+    min: 6.5      # PLACEHOLDER screening heuristic to tune
+    max: 9.7      # PLACEHOLDER screening heuristic to tune
+    reason: out_of_range
+  - channel: crp_specific_conductance
+    min: 300      # PLACEHOLDER screening heuristic to tune (uS/cm)
+    max: 3000     # PLACEHOLDER screening heuristic to tune (uS/cm)
+    reason: out_of_range
+  - channel: discharge
+    max: 30000    # PLACEHOLDER screening heuristic to tune (ft3/s, the unit in the file)
+    reason: out_of_range
+  - channel: air_temp
+    max: 42       # PLACEHOLDER screening heuristic to tune (degC)
+    reason: out_of_range
+  - channel: crp_secchi_depth
+    max: 3        # PLACEHOLDER screening heuristic to tune (m)
+    reason: out_of_range
+  - channel: crp_ammonia_n
+    max: 20       # PLACEHOLDER screening heuristic to tune (mg/L)
+    reason: out_of_range
+  - channel: crp_tss
+    max: 400      # PLACEHOLDER screening heuristic to tune (mg/L)
+    reason: out_of_range
+  - channel: crp_total_hardness
+    max: 450      # PLACEHOLDER screening heuristic to tune (mg/L)
+    reason: out_of_range
+
+# A value equal to exactly `equals` on a date before `before`.
+equals_before_rules:
+  - channel: chlorophyll_a
+    equals: 1               # PLACEHOLDER screening heuristic to tune (ug/L)
+    before: "1999-01-01"    # PLACEHOLDER screening heuristic to tune
+    reason: possible_detection_limit_placeholder
+
+# A block of cells that is identical on two different dates of the same station: the block on the
+# later date is flagged. A block is compared only when it has at least `min_filled` values.
+duplicate_blocks:
+  - name: field
+    reason: duplicate_block
+    min_filled: 4           # PLACEHOLDER screening heuristic to tune
+    channels:
+      - discharge
+      - crp_water_depth
+      - crp_days_since_precip
+      - air_temp
+      - water_temp
+  - name: lab
+    reason: duplicate_block
+    min_filled: 8           # PLACEHOLDER screening heuristic to tune
+    channels:               # the lab columns from chloride onward
+      - crp_chloride
+      - crp_sulfate
+      - crp_alkalinity
+      - crp_total_hardness
+      - crp_bod
+      - crp_tss
+      - crp_vss
+      - crp_tds_lab
+      - crp_toc
+      - crp_ammonia_n
+      - crp_nitrate_nitrite
+      - crp_kjeldahl_n
+      - total_phosphorus
+      - crp_ortho_phosphorus
+      - chlorophyll_a
+      - crp_pheophytin_a
+      - crp_total_calcium
+      - crp_total_magnesium
+      - crp_total_potassium
+      - crp_total_sodium
+      - crp_total_fluoride
+      - crp_total_silica
+
+# Rows sharing (station, date) are merged; two different values for one channel are a conflict:
+# the first is kept as suspect with this reason, the other goes to the quarantine file.
+same_date_merge:
+  conflict_reason: conflicting_duplicate
+
+# Row-level quarantine: the whole row goes to crp_quarantine.csv, not into the clean table.
+row_quarantine:
+  date_unparseable: true       # the date cell is not m/d/yyyy, mm/dd/yy or mm/dd/yyyy
+  date_out_of_sequence: true   # date outside [previous, next] while previous <= next

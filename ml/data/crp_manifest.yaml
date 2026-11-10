@@ -1,0 +1,23 @@
+# Raw CRP files this repository was built against (the files themselves are gitignored).
+# Written by `python -m ml.data.crp manifest`; checked by `python -m ml.data.crp verify`.
+# source_url and downloaded_on are for the owner to fill; a rewrite keeps filled values.
+version: 1
+files:
+- name: 13202.csv
+  sha256: 246795f283e0dcd2d6f890285b47b84da60d154c290db7ea4e28298ca059260f
+  size_bytes: 29769
+  line_count: 360
+  source_url: PLACEHOLDER
+  downloaded_on: PLACEHOLDER
+- name: 15816.csv
+  sha256: 9c079242c157073b2a07739dd9927d56b4e677323101b736ce0c8229ba4f234d
+  size_bytes: 16403
+  line_count: 199
+  source_url: PLACEHOLDER
+  downloaded_on: PLACEHOLDER
+- name: 17410.csv
+  sha256: aa47717694b7a3a50b991c3b4b2ff96714f38765bf422a376781349636d2300c
+  size_bytes: 13033
+  line_count: 113
+  source_url: PLACEHOLDER
+  downloaded_on: PLACEHOLDER
