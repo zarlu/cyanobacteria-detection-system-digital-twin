@@ -1,0 +1,126 @@
+# Base for the CRP tasks (real grab samples, source=CRP). Not runnable by itself: every
+# crp_*.yaml extends it. A child's keys override these; dicts merge, lists are replaced.
+#
+# NO hyperparameter search: with this few labels a search would tune on the data it is scored
+# on. Every model setting below is fixed. Values marked PLACEHOLDER are judgment calls to revisit.
+abstract: true
+source: crp_clean
+
+data:
+  path: data/clean/crp_long.csv     # written by `python -m ml.data.crp clean` (Phase 4a)
+  source_filter: CRP                # real and simulated data are never mixed
+  # stations: set by each task
+
+start: "2014-01-01"
+seed: 7
+
+split:
+  first_test_year: 2018
+  gap_days: 14
+  min_train_labels: 20
+  min_train_positives: 3            # event targets only
+  final_holdout_frac: 0.20          # last 20% of distinct sample dates, evaluated once per run
+
+# Feature library. A task lists the sets it uses in `use_feature_sets`.
+#   deployable: true  = a node could measure every input live
+#   deployable: false = diagnostic only (needs a lab value from the same visit)
+# Same-visit measurements are same-date readings ("nowcast"). Previous-label features use only
+# labels dated strictly before the issue date.
+feature_sets:
+  season:
+    deployable: true
+    features:
+      - {name: doy_sin, kind: season_sin}
+      - {name: doy_cos, kind: season_cos}
+  sensor_like:
+    deployable: true
+    extends: season
+    features:
+      - {name: water_temp, kind: channel, channel: water_temp}
+      - {name: ph, kind: channel, channel: ph}
+      - {name: log_specific_conductance, kind: channel, channel: crp_specific_conductance, transform: log}
+      - {name: log1p_discharge, kind: channel, channel: discharge, transform: log1p}   # m3/s
+      - {name: air_temp, kind: channel, channel: air_temp}
+      - {name: station, kind: station_onehot}      # emitted only when the task has > 1 station
+  sensor_like_prev:
+    deployable: true
+    extends: sensor_like
+    features:
+      - {name: prev_label_log1p, kind: prev_label, transform: log1p}
+      - {name: prev_label_days, kind: prev_label_days}
+  lab_same_visit:
+    deployable: false               # total phosphorus is a lab value from the same visit
+    extends: sensor_like
+    features:
+      - {name: log_total_phosphorus, kind: channel, channel: total_phosphorus, transform: log}
+  sensor_like_plus_tss:
+    deployable: false               # TSS is a lab stand-in for turbidity (sensors not arrived)
+    extends: sensor_like
+    features:
+      - {name: log_tss, kind: channel, channel: crp_tss, transform: log}
+
+headline_feature_set: sensor_like
+
+baselines:
+  event: [persistence, seasonal_climatology, base_rate]
+  regression: [persistence, seasonal_climatology]
+
+climatology:
+  window_months: 1                  # test month plus or minus one (widens CLAUDE.md "same month")
+  min_labels: 3                     # fewer training labels in the window -> all-training mean
+
+models:
+  event:
+    logistic: {C: 0.5}              # L2 (the scikit-learn default penalty), standardized inputs
+    random_forest: {n_estimators: 300, min_samples_leaf: 3}
+    lightgbm: {num_leaves: 7, min_child_samples: 5, n_estimators: 200, learning_rate: 0.05}
+  regression:
+    ridge: {alpha: 10}              # on the transformed target, standardized inputs
+    random_forest: {n_estimators: 300, min_samples_leaf: 3}
+    lightgbm: {num_leaves: 7, min_child_samples: 5, n_estimators: 200, learning_rate: 0.05}
+
+eval:
+  n_boot: 1000
+  boot_seed: 7
+  ci: 0.90
+  costs: {c_fp: 1, c_fn: 9}         # PLACEHOLDER costs; p* = c_fp / (c_fp + c_fn) = 0.1
+  slices:
+    apr_sep: {months: [4, 5, 6, 7, 8, 9]}
+    oct_mar: {months: [10, 11, 12, 1, 2, 3]}
+  slice_by_station: true            # applied only when the task has > 1 station
+
+intervals:
+  level: 0.90                       # split-conformal, from walk-forward residuals
+  min_residuals: 30                 # PLACEHOLDER: fewer residuals -> printed note
+
+explain:
+  n_repeats: 5
+  seed: 7
+
+drills:
+  shuffle_seeds: [11, 12, 13, 14, 15]
+  shuffle_margin: 0.10              # PLACEHOLDER
+  random_split_folds: 5
+  random_split_seed: 7
+
+warnings:                           # thresholds from CLAUDE.md section 8 and the 4b brief
+  min_n_train: 50
+  min_holdout_positives: 10
+  r2_suspicious: 0.95
+  r2_suspicious_max_n: 200
+  min_recent_complete_share: 0.50
+  recent_years: 2
+  min_labels_per_station_year: 4
+
+# --fast: development only. The report is labeled FAST.
+fast:
+  models:
+    event:
+      random_forest: {n_estimators: 40}
+      lightgbm: {n_estimators: 40}
+    regression:
+      random_forest: {n_estimators: 40}
+      lightgbm: {n_estimators: 40}
+  eval: {n_boot: 200}
+  explain: {n_repeats: 2}
+  drills: {shuffle_seeds: [11, 12]}

@@ -1,0 +1,5284 @@
+{
+  "description": "Total phosphorus (mg/L as P) at CRP station 13202 only. Regression on the log1p scale. No event target: no threshold is agreed.",
+  "eval": {
+    "boot_seed": 7,
+    "ci": 0.9,
+    "costs": {
+      "c_fn": 9,
+      "c_fp": 1
+    },
+    "n_boot": 1000,
+    "slice_by_station": true,
+    "slices": {
+      "apr_sep": {
+        "months": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ]
+      },
+      "oct_mar": {
+        "months": [
+          10,
+          11,
+          12,
+          1,
+          2,
+          3
+        ]
+      }
+    }
+  },
+  "fast": false,
+  "frame": {
+    "rows_before_start_dropped": 2082,
+    "rows_in_file": 7588,
+    "rows_not_good_dropped": 34,
+    "rows_source": 7588,
+    "rows_stations": 3500,
+    "station_dates": 109,
+    "stations": [
+      "13202"
+    ],
+    "target_right_censored_dropped": 0
+  },
+  "headline_feature_set": "sensor_like",
+  "input": {
+    "path": "data/clean/crp_long.csv",
+    "sha256": "eef7c00928bcd8ce3f496f0559c81fc629583e5bd1c0d34cac1266bbed835bee"
+  },
+  "models": {
+    "event": {
+      "lightgbm": {
+        "learning_rate": 0.05,
+        "min_child_samples": 5,
+        "n_estimators": 200,
+        "num_leaves": 7
+      },
+      "logistic": {
+        "C": 0.5
+      },
+      "random_forest": {
+        "min_samples_leaf": 3,
+        "n_estimators": 300
+      }
+    },
+    "regression": {
+      "lightgbm": {
+        "learning_rate": 0.05,
+        "min_child_samples": 5,
+        "n_estimators": 200,
+        "num_leaves": 7
+      },
+      "random_forest": {
+        "min_samples_leaf": 3,
+        "n_estimators": 300
+      },
+      "ridge": {
+        "alpha": 10
+      }
+    }
+  },
+  "notes": [],
+  "primary_target": "regression",
+  "reference_comparison": null,
+  "seed": 7,
+  "source": "CRP",
+  "split": {
+    "final_holdout_frac": 0.2,
+    "first_test_year": 2018,
+    "gap_days": 14,
+    "min_train_labels": 20,
+    "min_train_positives": 3
+  },
+  "start": "2014-01-01",
+  "target": {
+    "channel": "total_phosphorus",
+    "left_censored_factor": 0.5,
+    "regression": {
+      "transform": "log1p"
+    },
+    "unit": "mg/L as P"
+  },
+  "targets": {
+    "regression": {
+      "baseline_meaning": {
+        "persistence": "the last sample at this station, carried forward (the previous label at the same station on a strictly earlier date; with no earlier label, the training median)",
+        "seasonal_climatology": "the mean of the training targets within plus or minus 1 calendar month(s) of the test month, pooled over the task's stations (with fewer than 3 training labels in that window, the mean of all training targets)"
+      },
+      "conformal": {
+        "level": 0.9,
+        "method": "split-conformal on absolute walk-forward residuals (transformed scale)",
+        "min_residuals": 30,
+        "n_residuals": 7,
+        "predictors": {
+          "lightgbm@sensor_like": {
+            "half_width_transformed": null,
+            "holdout_coverage": null,
+            "holdout_median_width": null
+          },
+          "lightgbm@sensor_like_plus_tss": {
+            "half_width_transformed": null,
+            "holdout_coverage": null,
+            "holdout_median_width": null
+          },
+          "lightgbm@sensor_like_prev": {
+            "half_width_transformed": null,
+            "holdout_coverage": null,
+            "holdout_median_width": null
+          },
+          "random_forest@sensor_like": {
+            "half_width_transformed": null,
+            "holdout_coverage": null,
+            "holdout_median_width": null
+          },
+          "random_forest@sensor_like_plus_tss": {
+            "half_width_transformed": null,
+            "holdout_coverage": null,
+            "holdout_median_width": null
+          },
+          "random_forest@sensor_like_prev": {
+            "half_width_transformed": null,
+            "holdout_coverage": null,
+            "holdout_median_width": null
+          },
+          "ridge@sensor_like": {
+            "half_width_transformed": null,
+            "holdout_coverage": null,
+            "holdout_median_width": null
+          },
+          "ridge@sensor_like_plus_tss": {
+            "half_width_transformed": null,
+            "holdout_coverage": null,
+            "holdout_median_width": null
+          },
+          "ridge@sensor_like_prev": {
+            "half_width_transformed": null,
+            "holdout_coverage": null,
+            "holdout_median_width": null
+          }
+        },
+        "too_few_residuals": true
+      },
+      "feature_availability": {
+        "sensor_like": {
+          "columns": [
+            "doy_sin",
+            "doy_cos",
+            "water_temp",
+            "ph",
+            "log_specific_conductance",
+            "log1p_discharge",
+            "air_temp"
+          ],
+          "complete_share": 0.7428571429,
+          "deployable": true,
+          "missing_share_by_feature": {
+            "air_temp": 0.1142857143,
+            "log1p_discharge": 0.1428571429,
+            "log_specific_conductance": 0.1428571429,
+            "ph": 0.2,
+            "water_temp": 0.1142857143
+          },
+          "n": 35,
+          "recent_complete_share": 0.2,
+          "recent_n": 5,
+          "recent_years": [
+            2025,
+            2026
+          ]
+        },
+        "sensor_like_plus_tss": {
+          "columns": [
+            "doy_sin",
+            "doy_cos",
+            "water_temp",
+            "ph",
+            "log_specific_conductance",
+            "log1p_discharge",
+            "air_temp",
+            "log_tss"
+          ],
+          "complete_share": 0.6857142857,
+          "deployable": false,
+          "missing_share_by_feature": {
+            "air_temp": 0.1142857143,
+            "log1p_discharge": 0.1428571429,
+            "log_specific_conductance": 0.1428571429,
+            "log_tss": 0.0571428571,
+            "ph": 0.2,
+            "water_temp": 0.1142857143
+          },
+          "n": 35,
+          "recent_complete_share": 0.2,
+          "recent_n": 5,
+          "recent_years": [
+            2025,
+            2026
+          ]
+        },
+        "sensor_like_prev": {
+          "columns": [
+            "doy_sin",
+            "doy_cos",
+            "water_temp",
+            "ph",
+            "log_specific_conductance",
+            "log1p_discharge",
+            "air_temp",
+            "prev_label_log1p",
+            "prev_label_days"
+          ],
+          "complete_share": 0.7142857143,
+          "deployable": true,
+          "missing_share_by_feature": {
+            "air_temp": 0.1142857143,
+            "log1p_discharge": 0.1428571429,
+            "log_specific_conductance": 0.1428571429,
+            "ph": 0.2,
+            "prev_label_days": 0.0285714286,
+            "prev_label_log1p": 0.0285714286,
+            "water_temp": 0.1142857143
+          },
+          "n": 35,
+          "recent_complete_share": 0.2,
+          "recent_n": 5,
+          "recent_years": [
+            2025,
+            2026
+          ]
+        }
+      },
+      "folds": [
+        {
+          "fold": "2021",
+          "n_test": 3,
+          "n_train": 21,
+          "test_first_date": "2021-03-31",
+          "test_last_date": "2021-07-26",
+          "train_last_date": "2020-11-30"
+        },
+        {
+          "fold": "2022",
+          "n_test": 2,
+          "n_train": 24,
+          "test_first_date": "2022-03-16",
+          "test_last_date": "2022-05-18",
+          "train_last_date": "2021-07-26"
+        },
+        {
+          "fold": "2023",
+          "n_test": 2,
+          "n_train": 26,
+          "test_first_date": "2023-07-18",
+          "test_last_date": "2023-11-29",
+          "train_last_date": "2022-05-18"
+        }
+      ],
+      "holdout": {
+        "all": {
+          "differences": [
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": -0.0053417813,
+                "hi": 0.027408577,
+                "lo": -0.0353675314,
+                "verdict": "no_difference"
+              },
+              "model": "persistence",
+              "sentence": "persistence shows no demonstrable difference from seasonal climatology (MAE difference -0.005, 90% CI [-0.035, +0.027])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": 0.0053417813,
+                "hi": 0.0353675314,
+                "lo": -0.027408577,
+                "verdict": "no_difference"
+              },
+              "model": "seasonal_climatology",
+              "sentence": "seasonal climatology shows no demonstrable difference from persistence (MAE difference +0.005, 90% CI [-0.027, +0.035])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": 0.0890764619,
+                "hi": 0.1457489822,
+                "lo": 0.0306653912,
+                "verdict": "worse"
+              },
+              "model": "ridge@sensor_like",
+              "sentence": "ridge on sensor_like (deployable) is worse than persistence (MAE difference +0.089, 90% CI [+0.031, +0.146])",
+              "verdict": "worse"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": 0.0837346805,
+                "hi": 0.1383471438,
+                "lo": 0.0298865515,
+                "verdict": "worse"
+              },
+              "model": "ridge@sensor_like",
+              "sentence": "ridge on sensor_like (deployable) is worse than seasonal climatology (MAE difference +0.084, 90% CI [+0.030, +0.138])",
+              "verdict": "worse"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": 0.0088150432,
+                "hi": 0.0429131993,
+                "lo": -0.0287078626,
+                "verdict": "no_difference"
+              },
+              "model": "random_forest@sensor_like",
+              "sentence": "random_forest on sensor_like (deployable) shows no demonstrable difference from persistence (MAE difference +0.009, 90% CI [-0.029, +0.043])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": 0.0034732618,
+                "hi": 0.0172932953,
+                "lo": -0.0098005402,
+                "verdict": "no_difference"
+              },
+              "model": "random_forest@sensor_like",
+              "sentence": "random_forest on sensor_like (deployable) shows no demonstrable difference from seasonal climatology (MAE difference +0.003, 90% CI [-0.010, +0.017])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": 0.0147181905,
+                "hi": 0.0621727811,
+                "lo": -0.0329077818,
+                "verdict": "no_difference"
+              },
+              "model": "lightgbm@sensor_like",
+              "sentence": "lightgbm on sensor_like (deployable) shows no demonstrable difference from persistence (MAE difference +0.015, 90% CI [-0.033, +0.062])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": 0.0093764092,
+                "hi": 0.0392481269,
+                "lo": -0.0210578412,
+                "verdict": "no_difference"
+              },
+              "model": "lightgbm@sensor_like",
+              "sentence": "lightgbm on sensor_like (deployable) shows no demonstrable difference from seasonal climatology (MAE difference +0.009, 90% CI [-0.021, +0.039])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": 0.0845621054,
+                "hi": 0.1459603269,
+                "lo": 0.0198781397,
+                "verdict": "worse"
+              },
+              "model": "ridge@sensor_like_prev",
+              "sentence": "ridge on sensor_like_prev (deployable) is worse than persistence (MAE difference +0.085, 90% CI [+0.020, +0.146])",
+              "verdict": "worse"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": 0.0792203241,
+                "hi": 0.1388022482,
+                "lo": 0.0219995879,
+                "verdict": "worse"
+              },
+              "model": "ridge@sensor_like_prev",
+              "sentence": "ridge on sensor_like_prev (deployable) is worse than seasonal climatology (MAE difference +0.079, 90% CI [+0.022, +0.139])",
+              "verdict": "worse"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": -0.0032581459,
+                "hi": 0.0252808133,
+                "lo": -0.03543174,
+                "verdict": "no_difference"
+              },
+              "model": "random_forest@sensor_like_prev",
+              "sentence": "random_forest on sensor_like_prev (deployable) shows no demonstrable difference from persistence (MAE difference -0.003, 90% CI [-0.035, +0.025])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": -0.0085999272,
+                "hi": 0.0069441485,
+                "lo": -0.0234004214,
+                "verdict": "no_difference"
+              },
+              "model": "random_forest@sensor_like_prev",
+              "sentence": "random_forest on sensor_like_prev (deployable) shows no demonstrable difference from seasonal climatology (MAE difference -0.009, 90% CI [-0.023, +0.007])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": 0.0073840091,
+                "hi": 0.0258381592,
+                "lo": -0.0119855701,
+                "verdict": "no_difference"
+              },
+              "model": "lightgbm@sensor_like_prev",
+              "sentence": "lightgbm on sensor_like_prev (deployable) shows no demonstrable difference from persistence (MAE difference +0.007, 90% CI [-0.012, +0.026])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": 0.0020422277,
+                "hi": 0.0381203383,
+                "lo": -0.0341104181,
+                "verdict": "no_difference"
+              },
+              "model": "lightgbm@sensor_like_prev",
+              "sentence": "lightgbm on sensor_like_prev (deployable) shows no demonstrable difference from seasonal climatology (MAE difference +0.002, 90% CI [-0.034, +0.038])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": 0.1007103447,
+                "hi": 0.1640740111,
+                "lo": 0.0379774068,
+                "verdict": "worse"
+              },
+              "model": "ridge@sensor_like_plus_tss",
+              "sentence": "ridge on sensor_like_plus_tss (diagnostic, not deployable) is worse than persistence (MAE difference +0.101, 90% CI [+0.038, +0.164])",
+              "verdict": "worse"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": 0.0953685634,
+                "hi": 0.1533714302,
+                "lo": 0.0377713138,
+                "verdict": "worse"
+              },
+              "model": "ridge@sensor_like_plus_tss",
+              "sentence": "ridge on sensor_like_plus_tss (diagnostic, not deployable) is worse than seasonal climatology (MAE difference +0.095, 90% CI [+0.038, +0.153])",
+              "verdict": "worse"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": 0.0150097719,
+                "hi": 0.0483721958,
+                "lo": -0.0212387463,
+                "verdict": "no_difference"
+              },
+              "model": "random_forest@sensor_like_plus_tss",
+              "sentence": "random_forest on sensor_like_plus_tss (diagnostic, not deployable) shows no demonstrable difference from persistence (MAE difference +0.015, 90% CI [-0.021, +0.048])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": 0.0096679905,
+                "hi": 0.0202293582,
+                "lo": -0.001417628,
+                "verdict": "no_difference"
+              },
+              "model": "random_forest@sensor_like_plus_tss",
+              "sentence": "random_forest on sensor_like_plus_tss (diagnostic, not deployable) shows no demonstrable difference from seasonal climatology (MAE difference +0.010, 90% CI [-0.001, +0.020])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": 0.004653489,
+                "hi": 0.0459574405,
+                "lo": -0.0378394519,
+                "verdict": "no_difference"
+              },
+              "model": "lightgbm@sensor_like_plus_tss",
+              "sentence": "lightgbm on sensor_like_plus_tss (diagnostic, not deployable) shows no demonstrable difference from persistence (MAE difference +0.005, 90% CI [-0.038, +0.046])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": -0.0006882923,
+                "hi": 0.0193257971,
+                "lo": -0.0211090219,
+                "verdict": "no_difference"
+              },
+              "model": "lightgbm@sensor_like_plus_tss",
+              "sentence": "lightgbm on sensor_like_plus_tss (diagnostic, not deployable) shows no demonstrable difference from seasonal climatology (MAE difference -0.001, 90% CI [-0.021, +0.019])",
+              "verdict": "no_difference"
+            }
+          ],
+          "n": 7,
+          "n_censored": 0,
+          "n_dates": 7,
+          "predictors": {
+            "lightgbm@sensor_like": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.1176486212,
+                  "lo": 0.0339947697,
+                  "n_boot_defined": 1000,
+                  "value": 0.0768610477
+                },
+                "mae_log": {
+                  "hi": 0.1022227173,
+                  "lo": 0.0293159312,
+                  "n_boot_defined": 1000,
+                  "value": 0.06669952
+                },
+                "r2": {
+                  "hi": -1.4169891237,
+                  "lo": -22.5487908267,
+                  "n_boot_defined": 1000,
+                  "value": -5.3434747119
+                },
+                "rmse": {
+                  "hi": 0.1339913334,
+                  "lo": 0.0533506483,
+                  "n_boot_defined": 1000,
+                  "value": 0.1019762514
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.4541886814,
+                  "lo": -1.1376387134,
+                  "n_boot_defined": 1000,
+                  "value": -0.236844445
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.3507863422,
+                  "lo": -0.6238526114,
+                  "n_boot_defined": 1000,
+                  "value": -0.1389413857
+                }
+              }
+            },
+            "lightgbm@sensor_like_plus_tss": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.1018490782,
+                  "lo": 0.0331757347,
+                  "n_boot_defined": 1000,
+                  "value": 0.0667963461
+                },
+                "mae_log": {
+                  "hi": 0.0872759861,
+                  "lo": 0.0281452568,
+                  "n_boot_defined": 1000,
+                  "value": 0.0572468668
+                },
+                "r2": {
+                  "hi": -1.4203492547,
+                  "lo": -12.4633609406,
+                  "n_boot_defined": 1000,
+                  "value": -3.6770786934
+                },
+                "rmse": {
+                  "hi": 0.1152323107,
+                  "lo": 0.046669933,
+                  "n_boot_defined": 1000,
+                  "value": 0.0875634321
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.5087070299,
+                  "lo": -0.8873103729,
+                  "n_boot_defined": 1000,
+                  "value": -0.0748837307
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.3684647029,
+                  "lo": -0.2767916368,
+                  "n_boot_defined": 1000,
+                  "value": 0.0101992448
+                }
+              }
+            },
+            "lightgbm@sensor_like_prev": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.0982801089,
+                  "lo": 0.0393054867,
+                  "n_boot_defined": 1000,
+                  "value": 0.0695268662
+                },
+                "mae_log": {
+                  "hi": 0.0820609926,
+                  "lo": 0.033474826,
+                  "n_boot_defined": 1000,
+                  "value": 0.0582313592
+                },
+                "r2": {
+                  "hi": -1.0585113696,
+                  "lo": -25.2761520668,
+                  "n_boot_defined": 1000,
+                  "value": -3.3392384565
+                },
+                "rmse": {
+                  "hi": 0.106078612,
+                  "lo": 0.0550016458,
+                  "n_boot_defined": 1000,
+                  "value": 0.0843416699
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.2062890247,
+                  "lo": -0.3923066354,
+                  "n_boot_defined": 1000,
+                  "value": -0.1188231346
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.4261376469,
+                  "lo": -0.7547497687,
+                  "n_boot_defined": 1000,
+                  "value": -0.0302621129
+                }
+              }
+            },
+            "persistence": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.0798714286,
+                  "lo": 0.0431428571,
+                  "n_boot_defined": 1000,
+                  "value": 0.0621428571
+                },
+                "mae_log": {
+                  "hi": 0.0666003713,
+                  "lo": 0.036144387,
+                  "n_boot_defined": 1000,
+                  "value": 0.0519802358
+                },
+                "r2": {
+                  "hi": -0.9795724328,
+                  "lo": -16.8970086947,
+                  "n_boot_defined": 1000,
+                  "value": -1.864293895
+                },
+                "rmse": {
+                  "hi": 0.0833897904,
+                  "lo": 0.0479150249,
+                  "n_boot_defined": 1000,
+                  "value": 0.0685242397
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.0,
+                  "lo": 0.0,
+                  "n_boot_defined": 1000,
+                  "value": 0.0
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.4242467689,
+                  "lo": -0.5904465939,
+                  "n_boot_defined": 1000,
+                  "value": 0.0791555152
+                }
+              }
+            },
+            "random_forest@sensor_like": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.1012547636,
+                  "lo": 0.0407869336,
+                  "n_boot_defined": 1000,
+                  "value": 0.0709579003
+                },
+                "mae_log": {
+                  "hi": 0.0866132993,
+                  "lo": 0.0355294705,
+                  "n_boot_defined": 1000,
+                  "value": 0.0610581168
+                },
+                "r2": {
+                  "hi": -1.7493062568,
+                  "lo": -12.1362149492,
+                  "n_boot_defined": 1000,
+                  "value": -3.5938110147
+                },
+                "rmse": {
+                  "hi": 0.1120806158,
+                  "lo": 0.053190777,
+                  "n_boot_defined": 1000,
+                  "value": 0.0867804703
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.4044114576,
+                  "lo": -0.895678518,
+                  "n_boot_defined": 1000,
+                  "value": -0.1418512694
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.172120905,
+                  "lo": -0.257366745,
+                  "n_boot_defined": 1000,
+                  "value": -0.0514674438
+                }
+              }
+            },
+            "random_forest@sensor_like_plus_tss": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.1065610339,
+                  "lo": 0.0486776342,
+                  "n_boot_defined": 1000,
+                  "value": 0.077152629
+                },
+                "mae_log": {
+                  "hi": 0.0912860619,
+                  "lo": 0.0423412681,
+                  "n_boot_defined": 1000,
+                  "value": 0.0665389563
+                },
+                "r2": {
+                  "hi": -2.1955705209,
+                  "lo": -14.2851800856,
+                  "n_boot_defined": 1000,
+                  "value": -3.9689900668
+                },
+                "rmse": {
+                  "hi": 0.1148853685,
+                  "lo": 0.059311104,
+                  "n_boot_defined": 1000,
+                  "value": 0.0902546323
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.2953278161,
+                  "lo": -1.0261313605,
+                  "n_boot_defined": 1000,
+                  "value": -0.2415365586
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.0239024016,
+                  "lo": -0.3281971218,
+                  "n_boot_defined": 1000,
+                  "value": -0.1432620926
+                }
+              }
+            },
+            "random_forest@sensor_like_prev": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.0828749203,
+                  "lo": 0.0333138078,
+                  "n_boot_defined": 1000,
+                  "value": 0.0588847113
+                },
+                "mae_log": {
+                  "hi": 0.0701297862,
+                  "lo": 0.0285384125,
+                  "n_boot_defined": 1000,
+                  "value": 0.0501454434
+                },
+                "r2": {
+                  "hi": -1.1205191565,
+                  "lo": -8.0504207143,
+                  "n_boot_defined": 1000,
+                  "value": -2.1276493175
+                },
+                "rmse": {
+                  "hi": 0.0907460712,
+                  "lo": 0.0454499002,
+                  "n_boot_defined": 1000,
+                  "value": 0.0716051837
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.4769282596,
+                  "lo": -0.5511348713,
+                  "n_boot_defined": 1000,
+                  "value": 0.0524299336
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.3462280857,
+                  "lo": -0.1193410033,
+                  "n_boot_defined": 1000,
+                  "value": 0.1274353304
+                }
+              }
+            },
+            "ridge@sensor_like": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.1978110844,
+                  "lo": 0.1026996641,
+                  "n_boot_defined": 1000,
+                  "value": 0.151219319
+                },
+                "mae_log": {
+                  "hi": 0.1557494263,
+                  "lo": 0.08394708,
+                  "n_boot_defined": 1000,
+                  "value": 0.1207495051
+                },
+                "r2": {
+                  "hi": -6.4547958757,
+                  "lo": -117.6514856778,
+                  "n_boot_defined": 1000,
+                  "value": -16.3370409769
+                },
+                "rmse": {
+                  "hi": 0.203394038,
+                  "lo": 0.1228677527,
+                  "n_boot_defined": 1000,
+                  "value": 0.1685865506
+                },
+                "skill_vs_persistence": {
+                  "hi": -0.3877609029,
+                  "lo": -3.2646568475,
+                  "n_boot_defined": 1000,
+                  "value": -1.4334143288
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": -0.3822375496,
+                  "lo": -2.8743261506,
+                  "n_boot_defined": 1000,
+                  "value": -1.2407961638
+                }
+              }
+            },
+            "ridge@sensor_like_plus_tss": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.2167355053,
+                  "lo": 0.1083389923,
+                  "n_boot_defined": 1000,
+                  "value": 0.1628532019
+                },
+                "mae_log": {
+                  "hi": 0.1677868423,
+                  "lo": 0.088800183,
+                  "n_boot_defined": 1000,
+                  "value": 0.1291503359
+                },
+                "r2": {
+                  "hi": -7.6448193011,
+                  "lo": -140.3766456441,
+                  "n_boot_defined": 1000,
+                  "value": -19.2648673269
+                },
+                "rmse": {
+                  "hi": 0.2223157425,
+                  "lo": 0.129336424,
+                  "n_boot_defined": 1000,
+                  "value": 0.1822666953
+                },
+                "skill_vs_persistence": {
+                  "hi": -0.5051025651,
+                  "lo": -3.6389511749,
+                  "n_boot_defined": 1000,
+                  "value": -1.6206262369
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": -0.4818192652,
+                  "lo": -3.1664126955,
+                  "n_boot_defined": 1000,
+                  "value": -1.4131892168
+                }
+              }
+            },
+            "ridge@sensor_like_prev": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.197809742,
+                  "lo": 0.0922346625,
+                  "n_boot_defined": 1000,
+                  "value": 0.1467049625
+                },
+                "mae_log": {
+                  "hi": 0.1553397721,
+                  "lo": 0.0751354667,
+                  "n_boot_defined": 1000,
+                  "value": 0.1162283671
+                },
+                "r2": {
+                  "hi": -6.1345251271,
+                  "lo": -119.508332084,
+                  "n_boot_defined": 1000,
+                  "value": -16.355324514
+                },
+                "rmse": {
+                  "hi": 0.2067382725,
+                  "lo": 0.1184337896,
+                  "n_boot_defined": 1000,
+                  "value": 0.1686754224
+                },
+                "skill_vs_persistence": {
+                  "hi": -0.280075922,
+                  "lo": -3.2126218237,
+                  "n_boot_defined": 1000,
+                  "value": -1.3607695122
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": -0.2857470304,
+                  "lo": -2.8375399251,
+                  "n_boot_defined": 1000,
+                  "value": -1.1739015851
+                }
+              }
+            },
+            "seasonal_climatology": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.094532749,
+                  "lo": 0.042987703,
+                  "n_boot_defined": 1000,
+                  "value": 0.0674846385
+                },
+                "mae_log": {
+                  "hi": 0.0802794802,
+                  "lo": 0.0374725848,
+                  "n_boot_defined": 1000,
+                  "value": 0.0578664362
+                },
+                "r2": {
+                  "hi": -1.7664650104,
+                  "lo": -8.2332505239,
+                  "n_boot_defined": 1000,
+                  "value": -2.8328954063
+                },
+                "rmse": {
+                  "hi": 0.104077084,
+                  "lo": 0.0450959608,
+                  "n_boot_defined": 1000,
+                  "value": 0.0792681862
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.3712457848,
+                  "lo": -0.7368552115,
+                  "n_boot_defined": 1000,
+                  "value": -0.0859596995
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.0,
+                  "lo": 0.0,
+                  "n_boot_defined": 1000,
+                  "value": 0.0
+                }
+              }
+            }
+          }
+        },
+        "numeric_only": {
+          "differences": [
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": -0.0053417813,
+                "hi": 0.027408577,
+                "lo": -0.0353675314,
+                "verdict": "no_difference"
+              },
+              "model": "persistence",
+              "sentence": "persistence shows no demonstrable difference from seasonal climatology (MAE difference -0.005, 90% CI [-0.035, +0.027])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": 0.0053417813,
+                "hi": 0.0353675314,
+                "lo": -0.027408577,
+                "verdict": "no_difference"
+              },
+              "model": "seasonal_climatology",
+              "sentence": "seasonal climatology shows no demonstrable difference from persistence (MAE difference +0.005, 90% CI [-0.027, +0.035])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": 0.0890764619,
+                "hi": 0.1457489822,
+                "lo": 0.0306653912,
+                "verdict": "worse"
+              },
+              "model": "ridge@sensor_like",
+              "sentence": "ridge on sensor_like (deployable) is worse than persistence (MAE difference +0.089, 90% CI [+0.031, +0.146])",
+              "verdict": "worse"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": 0.0837346805,
+                "hi": 0.1383471438,
+                "lo": 0.0298865515,
+                "verdict": "worse"
+              },
+              "model": "ridge@sensor_like",
+              "sentence": "ridge on sensor_like (deployable) is worse than seasonal climatology (MAE difference +0.084, 90% CI [+0.030, +0.138])",
+              "verdict": "worse"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": 0.0088150432,
+                "hi": 0.0429131993,
+                "lo": -0.0287078626,
+                "verdict": "no_difference"
+              },
+              "model": "random_forest@sensor_like",
+              "sentence": "random_forest on sensor_like (deployable) shows no demonstrable difference from persistence (MAE difference +0.009, 90% CI [-0.029, +0.043])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": 0.0034732618,
+                "hi": 0.0172932953,
+                "lo": -0.0098005402,
+                "verdict": "no_difference"
+              },
+              "model": "random_forest@sensor_like",
+              "sentence": "random_forest on sensor_like (deployable) shows no demonstrable difference from seasonal climatology (MAE difference +0.003, 90% CI [-0.010, +0.017])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": 0.0147181905,
+                "hi": 0.0621727811,
+                "lo": -0.0329077818,
+                "verdict": "no_difference"
+              },
+              "model": "lightgbm@sensor_like",
+              "sentence": "lightgbm on sensor_like (deployable) shows no demonstrable difference from persistence (MAE difference +0.015, 90% CI [-0.033, +0.062])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": 0.0093764092,
+                "hi": 0.0392481269,
+                "lo": -0.0210578412,
+                "verdict": "no_difference"
+              },
+              "model": "lightgbm@sensor_like",
+              "sentence": "lightgbm on sensor_like (deployable) shows no demonstrable difference from seasonal climatology (MAE difference +0.009, 90% CI [-0.021, +0.039])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": 0.0845621054,
+                "hi": 0.1459603269,
+                "lo": 0.0198781397,
+                "verdict": "worse"
+              },
+              "model": "ridge@sensor_like_prev",
+              "sentence": "ridge on sensor_like_prev (deployable) is worse than persistence (MAE difference +0.085, 90% CI [+0.020, +0.146])",
+              "verdict": "worse"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": 0.0792203241,
+                "hi": 0.1388022482,
+                "lo": 0.0219995879,
+                "verdict": "worse"
+              },
+              "model": "ridge@sensor_like_prev",
+              "sentence": "ridge on sensor_like_prev (deployable) is worse than seasonal climatology (MAE difference +0.079, 90% CI [+0.022, +0.139])",
+              "verdict": "worse"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": -0.0032581459,
+                "hi": 0.0252808133,
+                "lo": -0.03543174,
+                "verdict": "no_difference"
+              },
+              "model": "random_forest@sensor_like_prev",
+              "sentence": "random_forest on sensor_like_prev (deployable) shows no demonstrable difference from persistence (MAE difference -0.003, 90% CI [-0.035, +0.025])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": -0.0085999272,
+                "hi": 0.0069441485,
+                "lo": -0.0234004214,
+                "verdict": "no_difference"
+              },
+              "model": "random_forest@sensor_like_prev",
+              "sentence": "random_forest on sensor_like_prev (deployable) shows no demonstrable difference from seasonal climatology (MAE difference -0.009, 90% CI [-0.023, +0.007])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": 0.0073840091,
+                "hi": 0.0258381592,
+                "lo": -0.0119855701,
+                "verdict": "no_difference"
+              },
+              "model": "lightgbm@sensor_like_prev",
+              "sentence": "lightgbm on sensor_like_prev (deployable) shows no demonstrable difference from persistence (MAE difference +0.007, 90% CI [-0.012, +0.026])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": 0.0020422277,
+                "hi": 0.0381203383,
+                "lo": -0.0341104181,
+                "verdict": "no_difference"
+              },
+              "model": "lightgbm@sensor_like_prev",
+              "sentence": "lightgbm on sensor_like_prev (deployable) shows no demonstrable difference from seasonal climatology (MAE difference +0.002, 90% CI [-0.034, +0.038])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": 0.1007103447,
+                "hi": 0.1640740111,
+                "lo": 0.0379774068,
+                "verdict": "worse"
+              },
+              "model": "ridge@sensor_like_plus_tss",
+              "sentence": "ridge on sensor_like_plus_tss (diagnostic, not deployable) is worse than persistence (MAE difference +0.101, 90% CI [+0.038, +0.164])",
+              "verdict": "worse"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": 0.0953685634,
+                "hi": 0.1533714302,
+                "lo": 0.0377713138,
+                "verdict": "worse"
+              },
+              "model": "ridge@sensor_like_plus_tss",
+              "sentence": "ridge on sensor_like_plus_tss (diagnostic, not deployable) is worse than seasonal climatology (MAE difference +0.095, 90% CI [+0.038, +0.153])",
+              "verdict": "worse"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": 0.0150097719,
+                "hi": 0.0483721958,
+                "lo": -0.0212387463,
+                "verdict": "no_difference"
+              },
+              "model": "random_forest@sensor_like_plus_tss",
+              "sentence": "random_forest on sensor_like_plus_tss (diagnostic, not deployable) shows no demonstrable difference from persistence (MAE difference +0.015, 90% CI [-0.021, +0.048])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": 0.0096679905,
+                "hi": 0.0202293582,
+                "lo": -0.001417628,
+                "verdict": "no_difference"
+              },
+              "model": "random_forest@sensor_like_plus_tss",
+              "sentence": "random_forest on sensor_like_plus_tss (diagnostic, not deployable) shows no demonstrable difference from seasonal climatology (MAE difference +0.010, 90% CI [-0.001, +0.020])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": 0.004653489,
+                "hi": 0.0459574405,
+                "lo": -0.0378394519,
+                "verdict": "no_difference"
+              },
+              "model": "lightgbm@sensor_like_plus_tss",
+              "sentence": "lightgbm on sensor_like_plus_tss (diagnostic, not deployable) shows no demonstrable difference from persistence (MAE difference +0.005, 90% CI [-0.038, +0.046])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": -0.0006882923,
+                "hi": 0.0193257971,
+                "lo": -0.0211090219,
+                "verdict": "no_difference"
+              },
+              "model": "lightgbm@sensor_like_plus_tss",
+              "sentence": "lightgbm on sensor_like_plus_tss (diagnostic, not deployable) shows no demonstrable difference from seasonal climatology (MAE difference -0.001, 90% CI [-0.021, +0.019])",
+              "verdict": "no_difference"
+            }
+          ],
+          "n": 7,
+          "n_censored": 0,
+          "n_dates": 7,
+          "predictors": {
+            "lightgbm@sensor_like": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.1176486212,
+                  "lo": 0.0339947697,
+                  "n_boot_defined": 1000,
+                  "value": 0.0768610477
+                },
+                "mae_log": {
+                  "hi": 0.1022227173,
+                  "lo": 0.0293159312,
+                  "n_boot_defined": 1000,
+                  "value": 0.06669952
+                },
+                "r2": {
+                  "hi": -1.4169891237,
+                  "lo": -22.5487908267,
+                  "n_boot_defined": 1000,
+                  "value": -5.3434747119
+                },
+                "rmse": {
+                  "hi": 0.1339913334,
+                  "lo": 0.0533506483,
+                  "n_boot_defined": 1000,
+                  "value": 0.1019762514
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.4541886814,
+                  "lo": -1.1376387134,
+                  "n_boot_defined": 1000,
+                  "value": -0.236844445
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.3507863422,
+                  "lo": -0.6238526114,
+                  "n_boot_defined": 1000,
+                  "value": -0.1389413857
+                }
+              }
+            },
+            "lightgbm@sensor_like_plus_tss": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.1018490782,
+                  "lo": 0.0331757347,
+                  "n_boot_defined": 1000,
+                  "value": 0.0667963461
+                },
+                "mae_log": {
+                  "hi": 0.0872759861,
+                  "lo": 0.0281452568,
+                  "n_boot_defined": 1000,
+                  "value": 0.0572468668
+                },
+                "r2": {
+                  "hi": -1.4203492547,
+                  "lo": -12.4633609406,
+                  "n_boot_defined": 1000,
+                  "value": -3.6770786934
+                },
+                "rmse": {
+                  "hi": 0.1152323107,
+                  "lo": 0.046669933,
+                  "n_boot_defined": 1000,
+                  "value": 0.0875634321
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.5087070299,
+                  "lo": -0.8873103729,
+                  "n_boot_defined": 1000,
+                  "value": -0.0748837307
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.3684647029,
+                  "lo": -0.2767916368,
+                  "n_boot_defined": 1000,
+                  "value": 0.0101992448
+                }
+              }
+            },
+            "lightgbm@sensor_like_prev": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.0982801089,
+                  "lo": 0.0393054867,
+                  "n_boot_defined": 1000,
+                  "value": 0.0695268662
+                },
+                "mae_log": {
+                  "hi": 0.0820609926,
+                  "lo": 0.033474826,
+                  "n_boot_defined": 1000,
+                  "value": 0.0582313592
+                },
+                "r2": {
+                  "hi": -1.0585113696,
+                  "lo": -25.2761520668,
+                  "n_boot_defined": 1000,
+                  "value": -3.3392384565
+                },
+                "rmse": {
+                  "hi": 0.106078612,
+                  "lo": 0.0550016458,
+                  "n_boot_defined": 1000,
+                  "value": 0.0843416699
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.2062890247,
+                  "lo": -0.3923066354,
+                  "n_boot_defined": 1000,
+                  "value": -0.1188231346
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.4261376469,
+                  "lo": -0.7547497687,
+                  "n_boot_defined": 1000,
+                  "value": -0.0302621129
+                }
+              }
+            },
+            "persistence": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.0798714286,
+                  "lo": 0.0431428571,
+                  "n_boot_defined": 1000,
+                  "value": 0.0621428571
+                },
+                "mae_log": {
+                  "hi": 0.0666003713,
+                  "lo": 0.036144387,
+                  "n_boot_defined": 1000,
+                  "value": 0.0519802358
+                },
+                "r2": {
+                  "hi": -0.9795724328,
+                  "lo": -16.8970086947,
+                  "n_boot_defined": 1000,
+                  "value": -1.864293895
+                },
+                "rmse": {
+                  "hi": 0.0833897904,
+                  "lo": 0.0479150249,
+                  "n_boot_defined": 1000,
+                  "value": 0.0685242397
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.0,
+                  "lo": 0.0,
+                  "n_boot_defined": 1000,
+                  "value": 0.0
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.4242467689,
+                  "lo": -0.5904465939,
+                  "n_boot_defined": 1000,
+                  "value": 0.0791555152
+                }
+              }
+            },
+            "random_forest@sensor_like": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.1012547636,
+                  "lo": 0.0407869336,
+                  "n_boot_defined": 1000,
+                  "value": 0.0709579003
+                },
+                "mae_log": {
+                  "hi": 0.0866132993,
+                  "lo": 0.0355294705,
+                  "n_boot_defined": 1000,
+                  "value": 0.0610581168
+                },
+                "r2": {
+                  "hi": -1.7493062568,
+                  "lo": -12.1362149492,
+                  "n_boot_defined": 1000,
+                  "value": -3.5938110147
+                },
+                "rmse": {
+                  "hi": 0.1120806158,
+                  "lo": 0.053190777,
+                  "n_boot_defined": 1000,
+                  "value": 0.0867804703
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.4044114576,
+                  "lo": -0.895678518,
+                  "n_boot_defined": 1000,
+                  "value": -0.1418512694
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.172120905,
+                  "lo": -0.257366745,
+                  "n_boot_defined": 1000,
+                  "value": -0.0514674438
+                }
+              }
+            },
+            "random_forest@sensor_like_plus_tss": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.1065610339,
+                  "lo": 0.0486776342,
+                  "n_boot_defined": 1000,
+                  "value": 0.077152629
+                },
+                "mae_log": {
+                  "hi": 0.0912860619,
+                  "lo": 0.0423412681,
+                  "n_boot_defined": 1000,
+                  "value": 0.0665389563
+                },
+                "r2": {
+                  "hi": -2.1955705209,
+                  "lo": -14.2851800856,
+                  "n_boot_defined": 1000,
+                  "value": -3.9689900668
+                },
+                "rmse": {
+                  "hi": 0.1148853685,
+                  "lo": 0.059311104,
+                  "n_boot_defined": 1000,
+                  "value": 0.0902546323
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.2953278161,
+                  "lo": -1.0261313605,
+                  "n_boot_defined": 1000,
+                  "value": -0.2415365586
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.0239024016,
+                  "lo": -0.3281971218,
+                  "n_boot_defined": 1000,
+                  "value": -0.1432620926
+                }
+              }
+            },
+            "random_forest@sensor_like_prev": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.0828749203,
+                  "lo": 0.0333138078,
+                  "n_boot_defined": 1000,
+                  "value": 0.0588847113
+                },
+                "mae_log": {
+                  "hi": 0.0701297862,
+                  "lo": 0.0285384125,
+                  "n_boot_defined": 1000,
+                  "value": 0.0501454434
+                },
+                "r2": {
+                  "hi": -1.1205191565,
+                  "lo": -8.0504207143,
+                  "n_boot_defined": 1000,
+                  "value": -2.1276493175
+                },
+                "rmse": {
+                  "hi": 0.0907460712,
+                  "lo": 0.0454499002,
+                  "n_boot_defined": 1000,
+                  "value": 0.0716051837
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.4769282596,
+                  "lo": -0.5511348713,
+                  "n_boot_defined": 1000,
+                  "value": 0.0524299336
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.3462280857,
+                  "lo": -0.1193410033,
+                  "n_boot_defined": 1000,
+                  "value": 0.1274353304
+                }
+              }
+            },
+            "ridge@sensor_like": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.1978110844,
+                  "lo": 0.1026996641,
+                  "n_boot_defined": 1000,
+                  "value": 0.151219319
+                },
+                "mae_log": {
+                  "hi": 0.1557494263,
+                  "lo": 0.08394708,
+                  "n_boot_defined": 1000,
+                  "value": 0.1207495051
+                },
+                "r2": {
+                  "hi": -6.4547958757,
+                  "lo": -117.6514856778,
+                  "n_boot_defined": 1000,
+                  "value": -16.3370409769
+                },
+                "rmse": {
+                  "hi": 0.203394038,
+                  "lo": 0.1228677527,
+                  "n_boot_defined": 1000,
+                  "value": 0.1685865506
+                },
+                "skill_vs_persistence": {
+                  "hi": -0.3877609029,
+                  "lo": -3.2646568475,
+                  "n_boot_defined": 1000,
+                  "value": -1.4334143288
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": -0.3822375496,
+                  "lo": -2.8743261506,
+                  "n_boot_defined": 1000,
+                  "value": -1.2407961638
+                }
+              }
+            },
+            "ridge@sensor_like_plus_tss": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.2167355053,
+                  "lo": 0.1083389923,
+                  "n_boot_defined": 1000,
+                  "value": 0.1628532019
+                },
+                "mae_log": {
+                  "hi": 0.1677868423,
+                  "lo": 0.088800183,
+                  "n_boot_defined": 1000,
+                  "value": 0.1291503359
+                },
+                "r2": {
+                  "hi": -7.6448193011,
+                  "lo": -140.3766456441,
+                  "n_boot_defined": 1000,
+                  "value": -19.2648673269
+                },
+                "rmse": {
+                  "hi": 0.2223157425,
+                  "lo": 0.129336424,
+                  "n_boot_defined": 1000,
+                  "value": 0.1822666953
+                },
+                "skill_vs_persistence": {
+                  "hi": -0.5051025651,
+                  "lo": -3.6389511749,
+                  "n_boot_defined": 1000,
+                  "value": -1.6206262369
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": -0.4818192652,
+                  "lo": -3.1664126955,
+                  "n_boot_defined": 1000,
+                  "value": -1.4131892168
+                }
+              }
+            },
+            "ridge@sensor_like_prev": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.197809742,
+                  "lo": 0.0922346625,
+                  "n_boot_defined": 1000,
+                  "value": 0.1467049625
+                },
+                "mae_log": {
+                  "hi": 0.1553397721,
+                  "lo": 0.0751354667,
+                  "n_boot_defined": 1000,
+                  "value": 0.1162283671
+                },
+                "r2": {
+                  "hi": -6.1345251271,
+                  "lo": -119.508332084,
+                  "n_boot_defined": 1000,
+                  "value": -16.355324514
+                },
+                "rmse": {
+                  "hi": 0.2067382725,
+                  "lo": 0.1184337896,
+                  "n_boot_defined": 1000,
+                  "value": 0.1686754224
+                },
+                "skill_vs_persistence": {
+                  "hi": -0.280075922,
+                  "lo": -3.2126218237,
+                  "n_boot_defined": 1000,
+                  "value": -1.3607695122
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": -0.2857470304,
+                  "lo": -2.8375399251,
+                  "n_boot_defined": 1000,
+                  "value": -1.1739015851
+                }
+              }
+            },
+            "seasonal_climatology": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.094532749,
+                  "lo": 0.042987703,
+                  "n_boot_defined": 1000,
+                  "value": 0.0674846385
+                },
+                "mae_log": {
+                  "hi": 0.0802794802,
+                  "lo": 0.0374725848,
+                  "n_boot_defined": 1000,
+                  "value": 0.0578664362
+                },
+                "r2": {
+                  "hi": -1.7664650104,
+                  "lo": -8.2332505239,
+                  "n_boot_defined": 1000,
+                  "value": -2.8328954063
+                },
+                "rmse": {
+                  "hi": 0.104077084,
+                  "lo": 0.0450959608,
+                  "n_boot_defined": 1000,
+                  "value": 0.0792681862
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.3712457848,
+                  "lo": -0.7368552115,
+                  "n_boot_defined": 1000,
+                  "value": -0.0859596995
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.0,
+                  "lo": 0.0,
+                  "n_boot_defined": 1000,
+                  "value": 0.0
+                }
+              }
+            }
+          }
+        },
+        "slices": {
+          "apr_sep": {
+            "differences": [],
+            "n": 3,
+            "n_censored": 0,
+            "n_dates": 3,
+            "predictors": {
+              "lightgbm@sensor_like": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.0885727608,
+                    "lo": 0.0113485194,
+                    "n_boot_defined": 1000,
+                    "value": 0.0499606401
+                  },
+                  "mae_log": {
+                    "hi": 0.0743159178,
+                    "lo": 0.0099406734,
+                    "n_boot_defined": 1000,
+                    "value": 0.0421282956
+                  },
+                  "r2": {
+                    "hi": -0.1927986558,
+                    "lo": -3.9053522127,
+                    "n_boot_defined": 891,
+                    "value": -0.9271007161
+                  },
+                  "rmse": {
+                    "hi": 0.1023186772,
+                    "lo": 0.0118414572,
+                    "n_boot_defined": 1000,
+                    "value": 0.0728331374
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.8865148056,
+                    "lo": -0.0714446868,
+                    "n_boot_defined": 1000,
+                    "value": 0.4529856923
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.6264069089,
+                    "lo": 0.1966618643,
+                    "n_boot_defined": 1000,
+                    "value": 0.2934432535
+                  }
+                }
+              },
+              "lightgbm@sensor_like_plus_tss": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.0898594238,
+                    "lo": 0.0060612307,
+                    "n_boot_defined": 1000,
+                    "value": 0.0479603272
+                  },
+                  "mae_log": {
+                    "hi": 0.0755114304,
+                    "lo": 0.0052671011,
+                    "n_boot_defined": 1000,
+                    "value": 0.0403892657
+                  },
+                  "r2": {
+                    "hi": 0.6156013385,
+                    "lo": -4.2574693229,
+                    "n_boot_defined": 891,
+                    "value": -1.0516356099
+                  },
+                  "rmse": {
+                    "hi": 0.1060648373,
+                    "lo": 0.0067222168,
+                    "n_boot_defined": 1000,
+                    "value": 0.0751496437
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.9387754471,
+                    "lo": -0.0740170169,
+                    "n_boot_defined": 1000,
+                    "value": 0.474886928
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.822460312,
+                    "lo": 0.1623833368,
+                    "n_boot_defined": 1000,
+                    "value": 0.3217322135
+                  }
+                }
+              },
+              "lightgbm@sensor_like_prev": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.12020235,
+                    "lo": 0.0723713006,
+                    "n_boot_defined": 1000,
+                    "value": 0.0962868253
+                  },
+                  "mae_log": {
+                    "hi": 0.0986491052,
+                    "lo": 0.0600666997,
+                    "n_boot_defined": 1000,
+                    "value": 0.0793579025
+                  },
+                  "r2": {
+                    "hi": -0.6098390824,
+                    "lo": -131.4622631425,
+                    "n_boot_defined": 891,
+                    "value": -2.7798575607
+                  },
+                  "rmse": {
+                    "hi": 0.1247865174,
+                    "lo": 0.072371962,
+                    "n_boot_defined": 1000,
+                    "value": 0.1020033721
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.2138256793,
+                    "lo": -0.3282312356,
+                    "n_boot_defined": 1000,
+                    "value": -0.0542353133
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.3253973287,
+                    "lo": -2.5208505735,
+                    "n_boot_defined": 1000,
+                    "value": -0.3617140584
+                  }
+                }
+              },
+              "persistence": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.1,
+                    "lo": 0.0826666667,
+                    "n_boot_defined": 1000,
+                    "value": 0.0913333333
+                  },
+                  "mae_log": {
+                    "hi": 0.0837703574,
+                    "lo": 0.0680140999,
+                    "n_boot_defined": 1000,
+                    "value": 0.0758922286
+                  },
+                  "r2": {
+                    "hi": -1.1976982447,
+                    "lo": -84.0831758034,
+                    "n_boot_defined": 891,
+                    "value": -2.0794381206
+                  },
+                  "rmse": {
+                    "hi": 0.1000099995,
+                    "lo": 0.0833746564,
+                    "n_boot_defined": 1000,
+                    "value": 0.0920688148
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.0,
+                    "lo": 0.0,
+                    "n_boot_defined": 1000,
+                    "value": 0.0
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.2555460022,
+                    "lo": -2.2919985122,
+                    "n_boot_defined": 1000,
+                    "value": -0.2916604493
+                  }
+                }
+              },
+              "random_forest@sensor_like": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.1011271369,
+                    "lo": 0.0250015139,
+                    "n_boot_defined": 1000,
+                    "value": 0.0630643254
+                  },
+                  "mae_log": {
+                    "hi": 0.0854115937,
+                    "lo": 0.0218460666,
+                    "n_boot_defined": 1000,
+                    "value": 0.0536288301
+                  },
+                  "r2": {
+                    "hi": -0.9104648705,
+                    "lo": -7.400574281,
+                    "n_boot_defined": 891,
+                    "value": -1.3681170935
+                  },
+                  "rmse": {
+                    "hi": 0.1111421306,
+                    "lo": 0.0261667878,
+                    "n_boot_defined": 1000,
+                    "value": 0.0807380764
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.749984861,
+                    "lo": -0.2233121398,
+                    "n_boot_defined": 1000,
+                    "value": 0.3095146854
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.1769505344,
+                    "lo": 0.0798816832,
+                    "n_boot_defined": 1000,
+                    "value": 0.1081274284
+                  }
+                }
+              },
+              "random_forest@sensor_like_plus_tss": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.1105071235,
+                    "lo": 0.0284135316,
+                    "n_boot_defined": 1000,
+                    "value": 0.0694603276
+                  },
+                  "mae_log": {
+                    "hi": 0.093792663,
+                    "lo": 0.0249232084,
+                    "n_boot_defined": 1000,
+                    "value": 0.0593579357
+                  },
+                  "r2": {
+                    "hi": -1.1182634208,
+                    "lo": -13.3654350716,
+                    "n_boot_defined": 891,
+                    "value": -1.7496192957
+                  },
+                  "rmse": {
+                    "hi": 0.1188517216,
+                    "lo": 0.0318094175,
+                    "n_boot_defined": 1000,
+                    "value": 0.0869987666
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.7158646837,
+                    "lo": -0.3367797199,
+                    "n_boot_defined": 1000,
+                    "value": 0.2394854646
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.1134988508,
+                    "lo": -0.1284562273,
+                    "n_boot_defined": 1000,
+                    "value": 0.0176734535
+                  }
+                }
+              },
+              "random_forest@sensor_like_prev": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.0887431246,
+                    "lo": 0.018575631,
+                    "n_boot_defined": 1000,
+                    "value": 0.0536593778
+                  },
+                  "mae_log": {
+                    "hi": 0.0742312835,
+                    "lo": 0.0159744477,
+                    "n_boot_defined": 1000,
+                    "value": 0.0451028656
+                  },
+                  "r2": {
+                    "hi": -0.7170735343,
+                    "lo": -14.5315384944,
+                    "n_boot_defined": 891,
+                    "value": -0.7170735343
+                  },
+                  "rmse": {
+                    "hi": 0.0924050925,
+                    "lo": 0.0302384035,
+                    "n_boot_defined": 1000,
+                    "value": 0.0687497715
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.8123673637,
+                    "lo": -0.0606747956,
+                    "n_boot_defined": 1000,
+                    "value": 0.4124885645
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.5060295112,
+                    "lo": -0.1669248572,
+                    "n_boot_defined": 1000,
+                    "value": 0.2411347152
+                  }
+                }
+              },
+              "ridge@sensor_like": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.1937015295,
+                    "lo": 0.0577306599,
+                    "n_boot_defined": 1000,
+                    "value": 0.1257160947
+                  },
+                  "mae_log": {
+                    "hi": 0.1512327833,
+                    "lo": 0.0457559235,
+                    "n_boot_defined": 1000,
+                    "value": 0.0984943534
+                  },
+                  "r2": {
+                    "hi": -0.7561497701,
+                    "lo": -293.2288742867,
+                    "n_boot_defined": 891,
+                    "value": -7.2603848656
+                  },
+                  "rmse": {
+                    "hi": 0.1994052189,
+                    "lo": 0.0755892244,
+                    "n_boot_defined": 1000,
+                    "value": 0.1507915318
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.3747581963,
+                    "lo": -1.1442973743,
+                    "n_boot_defined": 1000,
+                    "value": -0.3764535913
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.1402529335,
+                    "lo": -3.6630914192,
+                    "n_boot_defined": 1000,
+                    "value": -0.7779106642
+                  }
+                }
+              },
+              "ridge@sensor_like_plus_tss": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.2110794388,
+                    "lo": 0.0671128023,
+                    "n_boot_defined": 1000,
+                    "value": 0.1390961206
+                  },
+                  "mae_log": {
+                    "hi": 0.1636859335,
+                    "lo": 0.0533998609,
+                    "n_boot_defined": 1000,
+                    "value": 0.1085428972
+                  },
+                  "r2": {
+                    "hi": -1.2017940671,
+                    "lo": -346.5213599333,
+                    "n_boot_defined": 891,
+                    "value": -8.8524743844
+                  },
+                  "rmse": {
+                    "hi": 0.2169734922,
+                    "lo": 0.0846384033,
+                    "n_boot_defined": 1000,
+                    "value": 0.1646832652
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.2731465454,
+                    "lo": -1.3366727545,
+                    "n_boot_defined": 1000,
+                    "value": -0.5229502252
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.034499826,
+                    "lo": -4.1146088306,
+                    "n_boot_defined": 1000,
+                    "value": -0.9671345721
+                  }
+                }
+              },
+              "ridge@sensor_like_prev": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.2030999431,
+                    "lo": 0.0480172363,
+                    "n_boot_defined": 1000,
+                    "value": 0.1255585897
+                  },
+                  "mae_log": {
+                    "hi": 0.1579812341,
+                    "lo": 0.0369240904,
+                    "n_boot_defined": 1000,
+                    "value": 0.0974526623
+                  },
+                  "r2": {
+                    "hi": -0.7362540634,
+                    "lo": -325.132254837,
+                    "n_boot_defined": 891,
+                    "value": -8.0068666516
+                  },
+                  "rmse": {
+                    "hi": 0.2096110783,
+                    "lo": 0.0751598234,
+                    "n_boot_defined": 1000,
+                    "value": 0.1574576184
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.4799577294,
+                    "lo": -1.248338854,
+                    "n_boot_defined": 1000,
+                    "value": -0.3747290846
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.2827527138,
+                    "lo": -3.7514108649,
+                    "n_boot_defined": 1000,
+                    "value": -0.7756831871
+                  }
+                }
+              },
+              "seasonal_climatology": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.1110433511,
+                    "lo": 0.0303766844,
+                    "n_boot_defined": 1000,
+                    "value": 0.0707100178
+                  },
+                  "mae_log": {
+                    "hi": 0.0942836007,
+                    "lo": 0.0268636383,
+                    "n_boot_defined": 1000,
+                    "value": 0.0605736195
+                  },
+                  "r2": {
+                    "hi": -1.3775211194,
+                    "lo": -9.1558517278,
+                    "n_boot_defined": 891,
+                    "value": -1.8983544222
+                  },
+                  "rmse": {
+                    "hi": 0.1224962733,
+                    "lo": 0.0308394266,
+                    "n_boot_defined": 1000,
+                    "value": 0.0893207904
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.6962331555,
+                    "lo": -0.3432663441,
+                    "n_boot_defined": 1000,
+                    "value": 0.225802725
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.0,
+                    "lo": 0.0,
+                    "n_boot_defined": 1000,
+                    "value": 0.0
+                  }
+                }
+              }
+            }
+          },
+          "oct_mar": {
+            "differences": [],
+            "n": 4,
+            "n_censored": 0,
+            "n_dates": 4,
+            "predictors": {
+              "lightgbm@sensor_like": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.1489752068,
+                    "lo": 0.0381458764,
+                    "n_boot_defined": 1000,
+                    "value": 0.0970363533
+                  },
+                  "mae_log": {
+                    "hi": 0.13274877,
+                    "lo": 0.0340510978,
+                    "n_boot_defined": 1000,
+                    "value": 0.0851279383
+                  },
+                  "r2": {
+                    "hi": -9.8642004669,
+                    "lo": -1563.2063403686,
+                    "n_boot_defined": 989,
+                    "value": -17.2249577822
+                  },
+                  "rmse": {
+                    "hi": 0.1609350494,
+                    "lo": 0.0523278121,
+                    "n_boot_defined": 1000,
+                    "value": 0.1192477392
+                  },
+                  "skill_vs_persistence": {
+                    "hi": -0.2623213675,
+                    "lo": -1.8898824468,
+                    "n_boot_defined": 1000,
+                    "value": -1.4108410762
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.3046274739,
+                    "lo": -1.1926395116,
+                    "n_boot_defined": 1000,
+                    "value": -0.4913617544
+                  }
+                }
+              },
+              "lightgbm@sensor_like_plus_tss": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.1237161656,
+                    "lo": 0.0373297692,
+                    "n_boot_defined": 1000,
+                    "value": 0.0809233603
+                  },
+                  "mae_log": {
+                    "hi": 0.1068580108,
+                    "lo": 0.0323896455,
+                    "n_boot_defined": 1000,
+                    "value": 0.0698900677
+                  },
+                  "r2": {
+                    "hi": -7.1932049265,
+                    "lo": -779.0553871946,
+                    "n_boot_defined": 989,
+                    "value": -10.7683677035
+                  },
+                  "rmse": {
+                    "hi": 0.1290603723,
+                    "lo": 0.0483752639,
+                    "n_boot_defined": 1000,
+                    "value": 0.0958241561
+                  },
+                  "skill_vs_persistence": {
+                    "hi": -0.4353745538,
+                    "lo": -1.408169103,
+                    "n_boot_defined": 1000,
+                    "value": -1.0105182679
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.2092980004,
+                    "lo": -0.6212431809,
+                    "n_boot_defined": 1000,
+                    "value": -0.2437194972
+                  }
+                }
+              },
+              "lightgbm@sensor_like_prev": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.0871686163,
+                    "lo": 0.0071665127,
+                    "n_boot_defined": 1000,
+                    "value": 0.0494568969
+                  },
+                  "mae_log": {
+                    "hi": 0.0739186238,
+                    "lo": 0.0061373739,
+                    "n_boot_defined": 1000,
+                    "value": 0.0423864517
+                  },
+                  "r2": {
+                    "hi": 0.4741404152,
+                    "lo": -425.7744274853,
+                    "n_boot_defined": 989,
+                    "value": -4.9533986626
+                  },
+                  "rmse": {
+                    "hi": 0.0961682076,
+                    "lo": 0.0078501064,
+                    "n_boot_defined": 1000,
+                    "value": 0.0681552588
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.7189602845,
+                    "lo": -0.6428403621,
+                    "n_boot_defined": 1000,
+                    "value": -0.2287427807
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.8244173295,
+                    "lo": -0.1136319045,
+                    "n_boot_defined": 1000,
+                    "value": 0.2398918339
+                  }
+                }
+              },
+              "persistence": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.0535,
+                    "lo": 0.0265,
+                    "n_boot_defined": 1000,
+                    "value": 0.04025
+                  },
+                  "mae_log": {
+                    "hi": 0.0444933843,
+                    "lo": 0.0225784472,
+                    "n_boot_defined": 1000,
+                    "value": 0.0340462412
+                  },
+                  "r2": {
+                    "hi": -0.5446341622,
+                    "lo": -354.625,
+                    "n_boot_defined": 989,
+                    "value": -1.3835309196
+                  },
+                  "rmse": {
+                    "hi": 0.0551588615,
+                    "lo": 0.0265141472,
+                    "n_boot_defined": 1000,
+                    "value": 0.0431248188
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.0,
+                    "lo": 0.0,
+                    "n_boot_defined": 1000,
+                    "value": 0.0
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.4637319218,
+                    "lo": 0.2099343255,
+                    "n_boot_defined": 1000,
+                    "value": 0.3813935854
+                  }
+                }
+              },
+              "random_forest@sensor_like": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.1124908911,
+                    "lo": 0.0340139472,
+                    "n_boot_defined": 1000,
+                    "value": 0.0768780815
+                  },
+                  "mae_log": {
+                    "hi": 0.0966847683,
+                    "lo": 0.0294468871,
+                    "n_boot_defined": 1000,
+                    "value": 0.0666300818
+                  },
+                  "r2": {
+                    "hi": -5.3643903535,
+                    "lo": -1475.2018353868,
+                    "n_boot_defined": 989,
+                    "value": -9.6248123075
+                  },
+                  "rmse": {
+                    "hi": 0.1224801771,
+                    "lo": 0.047718914,
+                    "n_boot_defined": 1000,
+                    "value": 0.091049491
+                  },
+                  "skill_vs_persistence": {
+                    "hi": -0.3082287387,
+                    "lo": -1.2227058538,
+                    "n_boot_defined": 1000,
+                    "value": -0.9100144471
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.1735606094,
+                    "lo": -0.4718541141,
+                    "n_boot_defined": 1000,
+                    "value": -0.181547189
+                  }
+                }
+              },
+              "random_forest@sensor_like_plus_tss": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.1149384178,
+                    "lo": 0.0479149544,
+                    "n_boot_defined": 1000,
+                    "value": 0.0829218551
+                  },
+                  "mae_log": {
+                    "hi": 0.0987672647,
+                    "lo": 0.0416058451,
+                    "n_boot_defined": 1000,
+                    "value": 0.0719247217
+                  },
+                  "r2": {
+                    "hi": -5.9178142582,
+                    "lo": -1611.4032900557,
+                    "n_boot_defined": 989,
+                    "value": -9.9948524318
+                  },
+                  "rmse": {
+                    "hi": 0.1206065282,
+                    "lo": 0.0531780001,
+                    "n_boot_defined": 1000,
+                    "value": 0.0926214533
+                  },
+                  "skill_vs_persistence": {
+                    "hi": -0.7277880943,
+                    "lo": -1.2811277725,
+                    "n_boot_defined": 1000,
+                    "value": -1.0601703123
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": -0.0600572422,
+                    "lo": -0.5188062528,
+                    "n_boot_defined": 1000,
+                    "value": -0.2744345704
+                  }
+                }
+              },
+              "random_forest@sensor_like_prev": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.0894416097,
+                    "lo": 0.0305420997,
+                    "n_boot_defined": 1000,
+                    "value": 0.0628037114
+                  },
+                  "mae_log": {
+                    "hi": 0.0764896766,
+                    "lo": 0.0263005418,
+                    "n_boot_defined": 1000,
+                    "value": 0.0539273767
+                  },
+                  "r2": {
+                    "hi": -3.1909114548,
+                    "lo": -1050.9178838901,
+                    "n_boot_defined": 989,
+                    "value": -5.9565918273
+                  },
+                  "rmse": {
+                    "hi": 0.0971327721,
+                    "lo": 0.0382714632,
+                    "n_boot_defined": 1000,
+                    "value": 0.0736741527
+                  },
+                  "skill_vs_persistence": {
+                    "hi": -0.1668099055,
+                    "lo": -0.8349700228,
+                    "n_boot_defined": 1000,
+                    "value": -0.5603406557
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.3528974114,
+                    "lo": -0.1649465586,
+                    "n_boot_defined": 1000,
+                    "value": 0.0347632614
+                  }
+                }
+              },
+              "ridge@sensor_like": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.2257749622,
+                    "lo": 0.1215967751,
+                    "n_boot_defined": 1000,
+                    "value": 0.1703467372
+                  },
+                  "mae_log": {
+                    "hi": 0.1750034161,
+                    "lo": 0.1008564103,
+                    "n_boot_defined": 1000,
+                    "value": 0.1374408689
+                  },
+                  "r2": {
+                    "hi": -21.1039741134,
+                    "lo": -6078.1800139566,
+                    "n_boot_defined": 989,
+                    "value": -40.8890474688
+                  },
+                  "rmse": {
+                    "hi": 0.2258137784,
+                    "lo": 0.1350464366,
+                    "n_boot_defined": 1000,
+                    "value": 0.1807869721
+                  },
+                  "skill_vs_persistence": {
+                    "hi": -1.9032911878,
+                    "lo": -7.5198098958,
+                    "n_boot_defined": 1000,
+                    "value": -3.2322170745
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": -0.6217034296,
+                    "lo": -3.8347611251,
+                    "n_boot_defined": 1000,
+                    "value": -1.6180766304
+                  }
+                }
+              },
+              "ridge@sensor_like_plus_tss": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.2496209665,
+                    "lo": 0.1261960443,
+                    "n_boot_defined": 1000,
+                    "value": 0.1806710128
+                  },
+                  "mae_log": {
+                    "hi": 0.1923969045,
+                    "lo": 0.1039993612,
+                    "n_boot_defined": 1000,
+                    "value": 0.1446059149
+                  },
+                  "r2": {
+                    "hi": -22.7434462362,
+                    "lo": -7060.2643304271,
+                    "n_boot_defined": 989,
+                    "value": -47.4416225738
+                  },
+                  "rmse": {
+                    "hi": 0.2496220865,
+                    "lo": 0.1444317846,
+                    "n_boot_defined": 1000,
+                    "value": 0.1944134152
+                  },
+                  "skill_vs_persistence": {
+                    "hi": -2.0252558171,
+                    "lo": -8.4522423508,
+                    "n_boot_defined": 1000,
+                    "value": -3.4887208158
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": -0.6867760977,
+                    "lo": -4.2463686283,
+                    "n_boot_defined": 1000,
+                    "value": -1.7767514901
+                  }
+                }
+              },
+              "ridge@sensor_like_prev": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.2250232912,
+                    "lo": 0.1092738172,
+                    "n_boot_defined": 1000,
+                    "value": 0.1625647422
+                  },
+                  "mae_log": {
+                    "hi": 0.1744769886,
+                    "lo": 0.0898122162,
+                    "n_boot_defined": 1000,
+                    "value": 0.1303101457
+                  },
+                  "r2": {
+                    "hi": -19.0289946831,
+                    "lo": -5360.642340246,
+                    "n_boot_defined": 989,
+                    "value": -38.9811220719
+                  },
+                  "rmse": {
+                    "hi": 0.2251435751,
+                    "lo": 0.1264654819,
+                    "n_boot_defined": 1000,
+                    "value": 0.176621829
+                  },
+                  "skill_vs_persistence": {
+                    "hi": -1.6115366558,
+                    "lo": -7.491444952,
+                    "n_boot_defined": 1000,
+                    "value": -3.0388755815
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": -0.4723326722,
+                    "lo": -3.8576337166,
+                    "n_boot_defined": 1000,
+                    "value": -1.4984743426
+                  }
+                }
+              },
+              "seasonal_climatology": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.0851982345,
+                    "lo": 0.0449329735,
+                    "n_boot_defined": 1000,
+                    "value": 0.065065604
+                  },
+                  "mae_log": {
+                    "hi": 0.0726362134,
+                    "lo": 0.0390358841,
+                    "n_boot_defined": 1000,
+                    "value": 0.0558360487
+                  },
+                  "r2": {
+                    "hi": -3.5642060949,
+                    "lo": -832.554418042,
+                    "n_boot_defined": 989,
+                    "value": -5.4240649274
+                  },
+                  "rmse": {
+                    "hi": 0.0888568017,
+                    "lo": 0.0461434947,
+                    "n_boot_defined": 1000,
+                    "value": 0.0707981402
+                  },
+                  "skill_vs_persistence": {
+                    "hi": -0.2657175628,
+                    "lo": -0.8647390001,
+                    "n_boot_defined": 1000,
+                    "value": -0.6165367451
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.0,
+                    "lo": 0.0,
+                    "n_boot_defined": 1000,
+                    "value": 0.0
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "holdout_dates": 7,
+      "holdout_fold": {
+        "fold": "holdout",
+        "n_test": 7,
+        "n_train": 28,
+        "test_first_date": "2024-03-27",
+        "test_last_date": "2026-03-30",
+        "train_last_date": "2023-11-29"
+      },
+      "holdout_skipped": null,
+      "holdout_start": "2024-03-27",
+      "importance": {
+        "method": "permutation importance on the walk-forward test rows: mean drop in negative MAE (transformed scale) when one feature is shuffled within each fold's test rows",
+        "predictors": {
+          "lightgbm@sensor_like": {
+            "air_temp": 0.0033852895,
+            "doy_cos": 0.0004349114,
+            "doy_sin": 0.0045224665,
+            "log1p_discharge": -0.0078903847,
+            "log_specific_conductance": 8.67603e-05,
+            "ph": 0.0001260098,
+            "water_temp": -0.0040939627
+          },
+          "lightgbm@sensor_like_plus_tss": {
+            "air_temp": 0.0014675895,
+            "doy_cos": 0.0015268764,
+            "doy_sin": 0.002872865,
+            "log1p_discharge": -0.0085814405,
+            "log_specific_conductance": -0.0022789061,
+            "log_tss": -0.0009501441,
+            "ph": 0.000389211,
+            "water_temp": -0.0057147404
+          },
+          "lightgbm@sensor_like_prev": {
+            "air_temp": 0.0067430069,
+            "doy_cos": 0.0012048366,
+            "doy_sin": 0.0036934229,
+            "log1p_discharge": -0.0032843713,
+            "log_specific_conductance": 0.0020557275,
+            "ph": 0.0043131036,
+            "prev_label_days": -0.006733462,
+            "prev_label_log1p": -0.0042921402,
+            "water_temp": 0.0035194373
+          },
+          "random_forest@sensor_like": {
+            "air_temp": 0.0002689249,
+            "doy_cos": -0.0002285188,
+            "doy_sin": -0.0001198536,
+            "log1p_discharge": -0.0021334543,
+            "log_specific_conductance": -0.0003894694,
+            "ph": -0.0003981208,
+            "water_temp": -0.0014274277
+          },
+          "random_forest@sensor_like_plus_tss": {
+            "air_temp": -0.0003011977,
+            "doy_cos": -7.81149e-05,
+            "doy_sin": -0.0002021751,
+            "log1p_discharge": -0.0020837038,
+            "log_specific_conductance": -0.0002114766,
+            "log_tss": 6.00908e-05,
+            "ph": -0.00051705,
+            "water_temp": -0.0013152566
+          },
+          "random_forest@sensor_like_prev": {
+            "air_temp": 0.0019786878,
+            "doy_cos": 0.0004194179,
+            "doy_sin": 0.0002869492,
+            "log1p_discharge": -0.0008721816,
+            "log_specific_conductance": -0.0002049884,
+            "ph": 0.0011527039,
+            "prev_label_days": -0.0029654012,
+            "prev_label_log1p": -0.0039287029,
+            "water_temp": 0.000120995
+          },
+          "ridge@sensor_like": {
+            "air_temp": 0.002570971,
+            "doy_cos": -0.0001107497,
+            "doy_sin": 0.0001281791,
+            "log1p_discharge": 0.0007685483,
+            "log_specific_conductance": -1.7044e-06,
+            "ph": 0.0022578296,
+            "water_temp": -0.0011679488
+          },
+          "ridge@sensor_like_plus_tss": {
+            "air_temp": 0.0046413191,
+            "doy_cos": 0.0022346752,
+            "doy_sin": 0.0001845023,
+            "log1p_discharge": 0.0004322066,
+            "log_specific_conductance": -6.57784e-05,
+            "log_tss": 0.0040490709,
+            "ph": -0.0007234867,
+            "water_temp": -0.0021998199
+          },
+          "ridge@sensor_like_prev": {
+            "air_temp": 0.0025854542,
+            "doy_cos": -0.0001541371,
+            "doy_sin": -4.88791e-05,
+            "log1p_discharge": 0.0004826779,
+            "log_specific_conductance": 4.18922e-05,
+            "ph": 0.0013803295,
+            "prev_label_days": -0.0094637191,
+            "prev_label_log1p": -0.0049454825,
+            "water_temp": -0.0016231749
+          }
+        }
+      },
+      "kind": "regression",
+      "labels": {
+        "distinct_dates": 35,
+        "labels_available": 35,
+        "labels_censored": 4,
+        "labels_used": 35,
+        "per_station": {
+          "13202": 35
+        }
+      },
+      "leakage_checks": {
+        "leaky_feature_guard": "assert_no_future_dependence (the truncation guard) raises on a feature built from the next sample's target; asserted by tests/ml/test_drills.py::test_leaky_feature_trips_the_guard",
+        "random_split_demo": {
+          "label": "what a random split would have claimed; NOT a valid estimate",
+          "metric": "MAE (transformed scale)",
+          "n": 28,
+          "n_splits": 5,
+          "predictors": {
+            "lightgbm@sensor_like": 0.0728688738,
+            "random_forest@sensor_like": 0.0648508018,
+            "ridge@sensor_like": 0.0683362489
+          },
+          "ran": true
+        },
+        "shuffled_labels": {
+          "margin": 0.1,
+          "metric": "MAE (transformed scale)",
+          "n": 7,
+          "predictors": {
+            "lightgbm@sensor_like": {
+              "mean": 0.0957327212,
+              "per_seed": [
+                0.1022761386,
+                0.0912976073,
+                0.0846265436,
+                0.1026284729,
+                0.0978348434
+              ],
+              "suspected": false
+            },
+            "lightgbm@sensor_like_plus_tss": {
+              "mean": 0.0906484412,
+              "per_seed": [
+                0.1063449722,
+                0.0950710059,
+                0.0849784912,
+                0.0833550305,
+                0.0834927061
+              ],
+              "suspected": false
+            },
+            "lightgbm@sensor_like_prev": {
+              "mean": 0.095198768,
+              "per_seed": [
+                0.0969532042,
+                0.1025494411,
+                0.0853564878,
+                0.0975277886,
+                0.0936069185
+              ],
+              "suspected": false
+            },
+            "random_forest@sensor_like": {
+              "mean": 0.0881474195,
+              "per_seed": [
+                0.0854011506,
+                0.0878919043,
+                0.0830721323,
+                0.0972801037,
+                0.0870918067
+              ],
+              "suspected": false
+            },
+            "random_forest@sensor_like_plus_tss": {
+              "mean": 0.090533394,
+              "per_seed": [
+                0.0986706894,
+                0.0892335824,
+                0.0893707645,
+                0.0892997843,
+                0.0860921493
+              ],
+              "suspected": false
+            },
+            "random_forest@sensor_like_prev": {
+              "mean": 0.0911489254,
+              "per_seed": [
+                0.0910524677,
+                0.0939168748,
+                0.0862207232,
+                0.1008617678,
+                0.0836927936
+              ],
+              "suspected": false
+            },
+            "ridge@sensor_like": {
+              "mean": 0.0866164026,
+              "per_seed": [
+                0.0897774055,
+                0.0773384079,
+                0.0873730034,
+                0.1026250835,
+                0.0759681125
+              ],
+              "suspected": false
+            },
+            "ridge@sensor_like_plus_tss": {
+              "mean": 0.0908196465,
+              "per_seed": [
+                0.0976118515,
+                0.0807756905,
+                0.0880224461,
+                0.1000197287,
+                0.0876685158
+              ],
+              "suspected": false
+            },
+            "ridge@sensor_like_prev": {
+              "mean": 0.0961734357,
+              "per_seed": [
+                0.1047150123,
+                0.0969744179,
+                0.0890646926,
+                0.1183227828,
+                0.0717902728
+              ],
+              "suspected": false
+            }
+          },
+          "ran": true,
+          "reference": 0.0913057319,
+          "reference_name": "MAE of the training-mean predictor (transformed scale)",
+          "seeds": [
+            11,
+            12,
+            13,
+            14,
+            15
+          ],
+          "suspected": false
+        },
+        "truncation": [
+          {
+            "dates_with_mismatch": 0,
+            "examples": [],
+            "feature_set": "sensor_like",
+            "issue_dates_checked": 35,
+            "passed": true,
+            "rows_checked": 35
+          },
+          {
+            "dates_with_mismatch": 0,
+            "examples": [],
+            "feature_set": "sensor_like_prev",
+            "issue_dates_checked": 35,
+            "passed": true,
+            "rows_checked": 35
+          },
+          {
+            "dates_with_mismatch": 0,
+            "examples": [],
+            "feature_set": "sensor_like_plus_tss",
+            "issue_dates_checked": 35,
+            "passed": true,
+            "rows_checked": 35
+          }
+        ]
+      },
+      "month_profile": {
+        "labels": {
+          "1": {
+            "n": 0
+          },
+          "10": {
+            "n": 0
+          },
+          "11": {
+            "n": 8
+          },
+          "12": {
+            "n": 0
+          },
+          "2": {
+            "n": 0
+          },
+          "3": {
+            "n": 11
+          },
+          "4": {
+            "n": 0
+          },
+          "5": {
+            "n": 8
+          },
+          "6": {
+            "n": 1
+          },
+          "7": {
+            "n": 7
+          },
+          "8": {
+            "n": 0
+          },
+          "9": {
+            "n": 0
+          }
+        },
+        "walk_forward": {
+          "1": {
+            "n": 0
+          },
+          "10": {
+            "n": 0
+          },
+          "11": {
+            "n": 1,
+            "observed_mean": 0.175,
+            "predicted_mean": {
+              "lightgbm@sensor_like": 0.0878778594,
+              "persistence": 0.076,
+              "random_forest@sensor_like": 0.1229287426,
+              "ridge@sensor_like": 0.1101142305,
+              "seasonal_climatology": 0.1192351367
+            }
+          },
+          "12": {
+            "n": 0
+          },
+          "2": {
+            "n": 0
+          },
+          "3": {
+            "n": 2,
+            "observed_mean": 0.207,
+            "predicted_mean": {
+              "lightgbm@sensor_like": 0.1238726891,
+              "persistence": 0.289,
+              "random_forest@sensor_like": 0.1162906929,
+              "ridge@sensor_like": 0.1066039105,
+              "seasonal_climatology": 0.1172071293
+            }
+          },
+          "4": {
+            "n": 0
+          },
+          "5": {
+            "n": 2,
+            "observed_mean": 0.1845,
+            "predicted_mean": {
+              "lightgbm@sensor_like": 0.1677457682,
+              "persistence": 0.207,
+              "random_forest@sensor_like": 0.1423886667,
+              "ridge@sensor_like": 0.1082278836,
+              "seasonal_climatology": 0.0921550908
+            }
+          },
+          "6": {
+            "n": 0
+          },
+          "7": {
+            "n": 2,
+            "observed_mean": 0.2365,
+            "predicted_mean": {
+              "lightgbm@sensor_like": 0.1314621953,
+              "persistence": 0.1845,
+              "random_forest@sensor_like": 0.1243465145,
+              "ridge@sensor_like": 0.1050967462,
+              "seasonal_climatology": 0.1064994534
+            }
+          },
+          "8": {
+            "n": 0
+          },
+          "9": {
+            "n": 0
+          }
+        }
+      },
+      "predictor_labels": {
+        "lightgbm@sensor_like": "lightgbm on sensor_like (deployable)",
+        "lightgbm@sensor_like_plus_tss": "lightgbm on sensor_like_plus_tss (diagnostic, not deployable)",
+        "lightgbm@sensor_like_prev": "lightgbm on sensor_like_prev (deployable)",
+        "persistence": "persistence",
+        "random_forest@sensor_like": "random_forest on sensor_like (deployable)",
+        "random_forest@sensor_like_plus_tss": "random_forest on sensor_like_plus_tss (diagnostic, not deployable)",
+        "random_forest@sensor_like_prev": "random_forest on sensor_like_prev (deployable)",
+        "ridge@sensor_like": "ridge on sensor_like (deployable)",
+        "ridge@sensor_like_plus_tss": "ridge on sensor_like_plus_tss (diagnostic, not deployable)",
+        "ridge@sensor_like_prev": "ridge on sensor_like_prev (deployable)",
+        "seasonal_climatology": "seasonal climatology"
+      },
+      "skipped_folds": [
+        {
+          "fold": "2018",
+          "n_test_not_scored": 1,
+          "reason": "14 training labels, fewer than min_train_labels=20"
+        },
+        {
+          "fold": "2019",
+          "n_test_not_scored": 4,
+          "reason": "15 training labels, fewer than min_train_labels=20"
+        },
+        {
+          "fold": "2020",
+          "n_test_not_scored": 2,
+          "reason": "19 training labels, fewer than min_train_labels=20"
+        }
+      ],
+      "test_station_year_counts": {
+        "13202/2021": 3,
+        "13202/2022": 2,
+        "13202/2023": 2,
+        "13202/2024": 2,
+        "13202/2025": 4,
+        "13202/2026": 1
+      },
+      "walk_forward": {
+        "all": {
+          "differences": [
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": 0.0157663057,
+                "hi": 0.092431339,
+                "lo": -0.0498387002,
+                "verdict": "no_difference"
+              },
+              "model": "persistence",
+              "sentence": "persistence shows no demonstrable difference from seasonal climatology (MAE difference +0.016, 90% CI [-0.050, +0.092])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": -0.0157663057,
+                "hi": 0.0498387002,
+                "lo": -0.092431339,
+                "verdict": "no_difference"
+              },
+              "model": "seasonal_climatology",
+              "sentence": "seasonal climatology shows no demonstrable difference from persistence (MAE difference -0.016, 90% CI [-0.092, +0.050])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": -0.0258615726,
+                "hi": 0.0410999505,
+                "lo": -0.1031741358,
+                "verdict": "no_difference"
+              },
+              "model": "ridge@sensor_like",
+              "sentence": "ridge on sensor_like (deployable) shows no demonstrable difference from persistence (MAE difference -0.026, 90% CI [-0.103, +0.041])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": -0.0100952669,
+                "hi": -0.0018753229,
+                "lo": -0.0181312051,
+                "verdict": "beats"
+              },
+              "model": "ridge@sensor_like",
+              "sentence": "ridge on sensor_like (deployable) beats seasonal climatology (MAE difference -0.010, 90% CI [-0.018, -0.002])",
+              "verdict": "beats"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": -0.01789346,
+                "hi": 0.0443490482,
+                "lo": -0.0942799433,
+                "verdict": "no_difference"
+              },
+              "model": "random_forest@sensor_like",
+              "sentence": "random_forest on sensor_like (deployable) shows no demonstrable difference from persistence (MAE difference -0.018, 90% CI [-0.094, +0.044])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": -0.0021271543,
+                "hi": 0.005647772,
+                "lo": -0.0098262157,
+                "verdict": "no_difference"
+              },
+              "model": "random_forest@sensor_like",
+              "sentence": "random_forest on sensor_like (deployable) shows no demonstrable difference from seasonal climatology (MAE difference -0.002, 90% CI [-0.010, +0.006])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": -0.0046030212,
+                "hi": 0.0518459046,
+                "lo": -0.0773660966,
+                "verdict": "no_difference"
+              },
+              "model": "lightgbm@sensor_like",
+              "sentence": "lightgbm on sensor_like (deployable) shows no demonstrable difference from persistence (MAE difference -0.005, 90% CI [-0.077, +0.052])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": 0.0111632845,
+                "hi": 0.0261777705,
+                "lo": -0.0061876292,
+                "verdict": "no_difference"
+              },
+              "model": "lightgbm@sensor_like",
+              "sentence": "lightgbm on sensor_like (deployable) shows no demonstrable difference from seasonal climatology (MAE difference +0.011, 90% CI [-0.006, +0.026])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": -0.0078137983,
+                "hi": 0.04376745,
+                "lo": -0.067806259,
+                "verdict": "no_difference"
+              },
+              "model": "ridge@sensor_like_prev",
+              "sentence": "ridge on sensor_like_prev (deployable) shows no demonstrable difference from persistence (MAE difference -0.008, 90% CI [-0.068, +0.044])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": 0.0079525074,
+                "hi": 0.0261389159,
+                "lo": -0.0085902872,
+                "verdict": "no_difference"
+              },
+              "model": "ridge@sensor_like_prev",
+              "sentence": "ridge on sensor_like_prev (deployable) shows no demonstrable difference from seasonal climatology (MAE difference +0.008, 90% CI [-0.009, +0.026])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": -0.0144345407,
+                "hi": 0.0381320486,
+                "lo": -0.0732309834,
+                "verdict": "no_difference"
+              },
+              "model": "random_forest@sensor_like_prev",
+              "sentence": "random_forest on sensor_like_prev (deployable) shows no demonstrable difference from persistence (MAE difference -0.014, 90% CI [-0.073, +0.038])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": 0.001331765,
+                "hi": 0.0208298236,
+                "lo": -0.0164729602,
+                "verdict": "no_difference"
+              },
+              "model": "random_forest@sensor_like_prev",
+              "sentence": "random_forest on sensor_like_prev (deployable) shows no demonstrable difference from seasonal climatology (MAE difference +0.001, 90% CI [-0.016, +0.021])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": -0.0198979427,
+                "hi": 0.0367978034,
+                "lo": -0.0765538189,
+                "verdict": "no_difference"
+              },
+              "model": "lightgbm@sensor_like_prev",
+              "sentence": "lightgbm on sensor_like_prev (deployable) shows no demonstrable difference from persistence (MAE difference -0.020, 90% CI [-0.077, +0.037])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": -0.004131637,
+                "hi": 0.0405477955,
+                "lo": -0.0487877825,
+                "verdict": "no_difference"
+              },
+              "model": "lightgbm@sensor_like_prev",
+              "sentence": "lightgbm on sensor_like_prev (deployable) shows no demonstrable difference from seasonal climatology (MAE difference -0.004, 90% CI [-0.049, +0.041])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": -0.0207073718,
+                "hi": 0.0483824071,
+                "lo": -0.1016600882,
+                "verdict": "no_difference"
+              },
+              "model": "ridge@sensor_like_plus_tss",
+              "sentence": "ridge on sensor_like_plus_tss (diagnostic, not deployable) shows no demonstrable difference from persistence (MAE difference -0.021, 90% CI [-0.102, +0.048])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": -0.0049410661,
+                "hi": 0.0061426598,
+                "lo": -0.0165034469,
+                "verdict": "no_difference"
+              },
+              "model": "ridge@sensor_like_plus_tss",
+              "sentence": "ridge on sensor_like_plus_tss (diagnostic, not deployable) shows no demonstrable difference from seasonal climatology (MAE difference -0.005, 90% CI [-0.017, +0.006])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": -0.017361285,
+                "hi": 0.0443856732,
+                "lo": -0.0935351638,
+                "verdict": "no_difference"
+              },
+              "model": "random_forest@sensor_like_plus_tss",
+              "sentence": "random_forest on sensor_like_plus_tss (diagnostic, not deployable) shows no demonstrable difference from persistence (MAE difference -0.017, 90% CI [-0.094, +0.044])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": -0.0015949793,
+                "hi": 0.0043821835,
+                "lo": -0.0068915679,
+                "verdict": "no_difference"
+              },
+              "model": "random_forest@sensor_like_plus_tss",
+              "sentence": "random_forest on sensor_like_plus_tss (diagnostic, not deployable) shows no demonstrable difference from seasonal climatology (MAE difference -0.002, 90% CI [-0.007, +0.004])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": 0.0106017645,
+                "hi": 0.0599118779,
+                "lo": -0.0431985685,
+                "verdict": "no_difference"
+              },
+              "model": "lightgbm@sensor_like_plus_tss",
+              "sentence": "lightgbm on sensor_like_plus_tss (diagnostic, not deployable) shows no demonstrable difference from persistence (MAE difference +0.011, 90% CI [-0.043, +0.060])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": 0.0263680702,
+                "hi": 0.0550563671,
+                "lo": -0.0011262967,
+                "verdict": "no_difference"
+              },
+              "model": "lightgbm@sensor_like_plus_tss",
+              "sentence": "lightgbm on sensor_like_plus_tss (diagnostic, not deployable) shows no demonstrable difference from seasonal climatology (MAE difference +0.026, 90% CI [-0.001, +0.055])",
+              "verdict": "no_difference"
+            }
+          ],
+          "n": 7,
+          "n_censored": 0,
+          "n_dates": 7,
+          "predictors": {
+            "lightgbm@sensor_like": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.1798845877,
+                  "lo": 0.0852052972,
+                  "n_boot_defined": 1000,
+                  "value": 0.1311112645
+                },
+                "mae_log": {
+                  "hi": 0.1481596833,
+                  "lo": 0.073781965,
+                  "n_boot_defined": 1000,
+                  "value": 0.1101513053
+                },
+                "r2": {
+                  "hi": -0.4959234703,
+                  "lo": -5.3119528785,
+                  "n_boot_defined": 1000,
+                  "value": -1.0874961713
+                },
+                "rmse": {
+                  "hi": 0.1968328255,
+                  "lo": 0.0935813571,
+                  "n_boot_defined": 1000,
+                  "value": 0.1516946925
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.4488640139,
+                  "lo": -0.4537623391,
+                  "n_boot_defined": 1000,
+                  "value": 0.0339169986
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.0347229568,
+                  "lo": -0.3723688228,
+                  "n_boot_defined": 1000,
+                  "value": -0.0930677154
+                }
+              }
+            },
+            "lightgbm@sensor_like_plus_tss": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.1921143084,
+                  "lo": 0.1061301845,
+                  "n_boot_defined": 1000,
+                  "value": 0.1463160502
+                },
+                "mae_log": {
+                  "hi": 0.1579509741,
+                  "lo": 0.0906059996,
+                  "n_boot_defined": 1000,
+                  "value": 0.1225862131
+                },
+                "r2": {
+                  "hi": -0.75209539,
+                  "lo": -6.6827707402,
+                  "n_boot_defined": 1000,
+                  "value": -1.3989988542
+                },
+                "rmse": {
+                  "hi": 0.2135359639,
+                  "lo": 0.1113165273,
+                  "n_boot_defined": 1000,
+                  "value": 0.1626194779
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.2654126691,
+                  "lo": -0.5199390362,
+                  "n_boot_defined": 1000,
+                  "value": -0.0781182646
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.0070185086,
+                  "lo": -0.7915513251,
+                  "n_boot_defined": 1000,
+                  "value": -0.2198292141
+                }
+              }
+            },
+            "lightgbm@sensor_like_prev": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.1728109078,
+                  "lo": 0.0608928712,
+                  "n_boot_defined": 1000,
+                  "value": 0.115816343
+                },
+                "mae_log": {
+                  "hi": 0.1454199703,
+                  "lo": 0.0521853843,
+                  "n_boot_defined": 1000,
+                  "value": 0.0975137744
+                },
+                "r2": {
+                  "hi": -0.0057262316,
+                  "lo": -4.5145242929,
+                  "n_boot_defined": 1000,
+                  "value": -0.9775144257
+                },
+                "rmse": {
+                  "hi": 0.2000132006,
+                  "lo": 0.0720706445,
+                  "n_boot_defined": 1000,
+                  "value": 0.1476445336
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.5186511403,
+                  "lo": -0.3091821759,
+                  "n_boot_defined": 1000,
+                  "value": 0.1466164199
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.354873979,
+                  "lo": -0.4524086173,
+                  "n_boot_defined": 1000,
+                  "value": 0.0344452404
+                }
+              }
+            },
+            "persistence": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.1841428571,
+                  "lo": 0.0951428571,
+                  "n_boot_defined": 1000,
+                  "value": 0.1357142857
+                },
+                "mae_log": {
+                  "hi": 0.1472970567,
+                  "lo": 0.0800216056,
+                  "n_boot_defined": 1000,
+                  "value": 0.1109324797
+                },
+                "r2": {
+                  "hi": -0.0201687448,
+                  "lo": -11.4408197578,
+                  "n_boot_defined": 1000,
+                  "value": -1.1737159953
+                },
+                "rmse": {
+                  "hi": 0.2046779819,
+                  "lo": 0.0987249144,
+                  "n_boot_defined": 1000,
+                  "value": 0.1547957179
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.0,
+                  "lo": 0.0,
+                  "n_boot_defined": 1000,
+                  "value": 0.0
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.2888468092,
+                  "lo": -1.2809016456,
+                  "n_boot_defined": 1000,
+                  "value": -0.1314428613
+                }
+              }
+            },
+            "random_forest@sensor_like": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.1771126643,
+                  "lo": 0.0629236864,
+                  "n_boot_defined": 1000,
+                  "value": 0.1178208257
+                },
+                "mae_log": {
+                  "hi": 0.1462979585,
+                  "lo": 0.0543423237,
+                  "n_boot_defined": 1000,
+                  "value": 0.0989557118
+                },
+                "r2": {
+                  "hi": -0.5045228416,
+                  "lo": -3.9078257773,
+                  "n_boot_defined": 1000,
+                  "value": -1.0509266847
+                },
+                "rmse": {
+                  "hi": 0.206106272,
+                  "lo": 0.0707231712,
+                  "n_boot_defined": 1000,
+                  "value": 0.1503601014
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.5677662666,
+                  "lo": -0.3544003103,
+                  "n_boot_defined": 1000,
+                  "value": 0.1318465473
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.0811124209,
+                  "lo": -0.0630300673,
+                  "n_boot_defined": 1000,
+                  "value": 0.0177339734
+                }
+              }
+            },
+            "random_forest@sensor_like_plus_tss": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.1789906861,
+                  "lo": 0.0644944249,
+                  "n_boot_defined": 1000,
+                  "value": 0.1183530007
+                },
+                "mae_log": {
+                  "hi": 0.1469370977,
+                  "lo": 0.0561653523,
+                  "n_boot_defined": 1000,
+                  "value": 0.0993655952
+                },
+                "r2": {
+                  "hi": -0.4751015536,
+                  "lo": -3.7715380873,
+                  "n_boot_defined": 1000,
+                  "value": -1.0451342157
+                },
+                "rmse": {
+                  "hi": 0.206898787,
+                  "lo": 0.0719740111,
+                  "n_boot_defined": 1000,
+                  "value": 0.1501476189
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.5622856229,
+                  "lo": -0.3629935167,
+                  "n_boot_defined": 1000,
+                  "value": 0.127925258
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.0513455937,
+                  "lo": -0.0566288048,
+                  "n_boot_defined": 1000,
+                  "value": 0.0132972587
+                }
+              }
+            },
+            "random_forest@sensor_like_prev": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.1753355447,
+                  "lo": 0.0727580741,
+                  "n_boot_defined": 1000,
+                  "value": 0.121279745
+                },
+                "mae_log": {
+                  "hi": 0.1444028484,
+                  "lo": 0.0632797206,
+                  "n_boot_defined": 1000,
+                  "value": 0.1017731928
+                },
+                "r2": {
+                  "hi": -0.5663641642,
+                  "lo": -3.3995427938,
+                  "n_boot_defined": 1000,
+                  "value": -0.979569004
+                },
+                "rmse": {
+                  "hi": 0.200772808,
+                  "lo": 0.076362602,
+                  "n_boot_defined": 1000,
+                  "value": 0.1477212128
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.4700705088,
+                  "lo": -0.3034546757,
+                  "n_boot_defined": 1000,
+                  "value": 0.1063597737
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.1208552329,
+                  "lo": -0.2842579489,
+                  "n_boot_defined": 1000,
+                  "value": -0.0111028546
+                }
+              }
+            },
+            "ridge@sensor_like": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.1722325799,
+                  "lo": 0.051350354,
+                  "n_boot_defined": 1000,
+                  "value": 0.1098527131
+                },
+                "mae_log": {
+                  "hi": 0.14321218,
+                  "lo": 0.0441083743,
+                  "n_boot_defined": 1000,
+                  "value": 0.0920604675
+                },
+                "r2": {
+                  "hi": -0.2827269246,
+                  "lo": -3.8011808401,
+                  "n_boot_defined": 1000,
+                  "value": -0.9938916591
+                },
+                "rmse": {
+                  "hi": 0.2054606102,
+                  "lo": 0.0660398437,
+                  "n_boot_defined": 1000,
+                  "value": 0.1482546488
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.6424104691,
+                  "lo": -0.3298023972,
+                  "n_boot_defined": 1000,
+                  "value": 0.190558956
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.2338314923,
+                  "lo": 0.0153458388,
+                  "n_boot_defined": 1000,
+                  "value": 0.0841637091
+                }
+              }
+            },
+            "ridge@sensor_like_plus_tss": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.1775717481,
+                  "lo": 0.0551546011,
+                  "n_boot_defined": 1000,
+                  "value": 0.1150069139
+                },
+                "mae_log": {
+                  "hi": 0.1476529684,
+                  "lo": 0.047179738,
+                  "n_boot_defined": 1000,
+                  "value": 0.0959996794
+                },
+                "r2": {
+                  "hi": -0.4123377708,
+                  "lo": -4.048428108,
+                  "n_boot_defined": 1000,
+                  "value": -1.0905145638
+                },
+                "rmse": {
+                  "hi": 0.2073662143,
+                  "lo": 0.0714803435,
+                  "n_boot_defined": 1000,
+                  "value": 0.1518043235
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.6175341281,
+                  "lo": -0.3942409548,
+                  "n_boot_defined": 1000,
+                  "value": 0.1525806342
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.1829953679,
+                  "lo": -0.0589577353,
+                  "n_boot_defined": 1000,
+                  "value": 0.0411934081
+                }
+              }
+            },
+            "ridge@sensor_like_prev": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.1802314184,
+                  "lo": 0.0797195129,
+                  "n_boot_defined": 1000,
+                  "value": 0.1279004874
+                },
+                "mae_log": {
+                  "hi": 0.1494765814,
+                  "lo": 0.0694053037,
+                  "n_boot_defined": 1000,
+                  "value": 0.1077371966
+                },
+                "r2": {
+                  "hi": -0.6534651636,
+                  "lo": -3.9781911557,
+                  "n_boot_defined": 1000,
+                  "value": -1.1341628951
+                },
+                "rmse": {
+                  "hi": 0.2055185591,
+                  "lo": 0.0825619221,
+                  "n_boot_defined": 1000,
+                  "value": 0.1533809151
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.420386743,
+                  "lo": -0.3545211037,
+                  "n_boot_defined": 1000,
+                  "value": 0.0575753561
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.0527023327,
+                  "lo": -0.3410142555,
+                  "n_boot_defined": 1000,
+                  "value": -0.0662996357
+                }
+              }
+            },
+            "seasonal_climatology": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.1819243373,
+                  "lo": 0.0619359004,
+                  "n_boot_defined": 1000,
+                  "value": 0.11994798
+                },
+                "mae_log": {
+                  "hi": 0.151204173,
+                  "lo": 0.0548050239,
+                  "n_boot_defined": 1000,
+                  "value": 0.1011366256
+                },
+                "r2": {
+                  "hi": -0.4801009032,
+                  "lo": -4.0937787664,
+                  "n_boot_defined": 1000,
+                  "value": -1.1611580044
+                },
+                "rmse": {
+                  "hi": 0.2142295287,
+                  "lo": 0.0691211391,
+                  "n_boot_defined": 1000,
+                  "value": 0.1543479274
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.5615754225,
+                  "lo": -0.4061667955,
+                  "n_boot_defined": 1000,
+                  "value": 0.1161727788
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.0,
+                  "lo": 0.0,
+                  "n_boot_defined": 1000,
+                  "value": 0.0
+                }
+              }
+            }
+          }
+        },
+        "numeric_only": {
+          "differences": [
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": 0.0157663057,
+                "hi": 0.092431339,
+                "lo": -0.0498387002,
+                "verdict": "no_difference"
+              },
+              "model": "persistence",
+              "sentence": "persistence shows no demonstrable difference from seasonal climatology (MAE difference +0.016, 90% CI [-0.050, +0.092])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": -0.0157663057,
+                "hi": 0.0498387002,
+                "lo": -0.092431339,
+                "verdict": "no_difference"
+              },
+              "model": "seasonal_climatology",
+              "sentence": "seasonal climatology shows no demonstrable difference from persistence (MAE difference -0.016, 90% CI [-0.092, +0.050])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": -0.0258615726,
+                "hi": 0.0410999505,
+                "lo": -0.1031741358,
+                "verdict": "no_difference"
+              },
+              "model": "ridge@sensor_like",
+              "sentence": "ridge on sensor_like (deployable) shows no demonstrable difference from persistence (MAE difference -0.026, 90% CI [-0.103, +0.041])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": -0.0100952669,
+                "hi": -0.0018753229,
+                "lo": -0.0181312051,
+                "verdict": "beats"
+              },
+              "model": "ridge@sensor_like",
+              "sentence": "ridge on sensor_like (deployable) beats seasonal climatology (MAE difference -0.010, 90% CI [-0.018, -0.002])",
+              "verdict": "beats"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": -0.01789346,
+                "hi": 0.0443490482,
+                "lo": -0.0942799433,
+                "verdict": "no_difference"
+              },
+              "model": "random_forest@sensor_like",
+              "sentence": "random_forest on sensor_like (deployable) shows no demonstrable difference from persistence (MAE difference -0.018, 90% CI [-0.094, +0.044])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": -0.0021271543,
+                "hi": 0.005647772,
+                "lo": -0.0098262157,
+                "verdict": "no_difference"
+              },
+              "model": "random_forest@sensor_like",
+              "sentence": "random_forest on sensor_like (deployable) shows no demonstrable difference from seasonal climatology (MAE difference -0.002, 90% CI [-0.010, +0.006])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": -0.0046030212,
+                "hi": 0.0518459046,
+                "lo": -0.0773660966,
+                "verdict": "no_difference"
+              },
+              "model": "lightgbm@sensor_like",
+              "sentence": "lightgbm on sensor_like (deployable) shows no demonstrable difference from persistence (MAE difference -0.005, 90% CI [-0.077, +0.052])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": 0.0111632845,
+                "hi": 0.0261777705,
+                "lo": -0.0061876292,
+                "verdict": "no_difference"
+              },
+              "model": "lightgbm@sensor_like",
+              "sentence": "lightgbm on sensor_like (deployable) shows no demonstrable difference from seasonal climatology (MAE difference +0.011, 90% CI [-0.006, +0.026])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": -0.0078137983,
+                "hi": 0.04376745,
+                "lo": -0.067806259,
+                "verdict": "no_difference"
+              },
+              "model": "ridge@sensor_like_prev",
+              "sentence": "ridge on sensor_like_prev (deployable) shows no demonstrable difference from persistence (MAE difference -0.008, 90% CI [-0.068, +0.044])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": 0.0079525074,
+                "hi": 0.0261389159,
+                "lo": -0.0085902872,
+                "verdict": "no_difference"
+              },
+              "model": "ridge@sensor_like_prev",
+              "sentence": "ridge on sensor_like_prev (deployable) shows no demonstrable difference from seasonal climatology (MAE difference +0.008, 90% CI [-0.009, +0.026])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": -0.0144345407,
+                "hi": 0.0381320486,
+                "lo": -0.0732309834,
+                "verdict": "no_difference"
+              },
+              "model": "random_forest@sensor_like_prev",
+              "sentence": "random_forest on sensor_like_prev (deployable) shows no demonstrable difference from persistence (MAE difference -0.014, 90% CI [-0.073, +0.038])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": 0.001331765,
+                "hi": 0.0208298236,
+                "lo": -0.0164729602,
+                "verdict": "no_difference"
+              },
+              "model": "random_forest@sensor_like_prev",
+              "sentence": "random_forest on sensor_like_prev (deployable) shows no demonstrable difference from seasonal climatology (MAE difference +0.001, 90% CI [-0.016, +0.021])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": -0.0198979427,
+                "hi": 0.0367978034,
+                "lo": -0.0765538189,
+                "verdict": "no_difference"
+              },
+              "model": "lightgbm@sensor_like_prev",
+              "sentence": "lightgbm on sensor_like_prev (deployable) shows no demonstrable difference from persistence (MAE difference -0.020, 90% CI [-0.077, +0.037])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": -0.004131637,
+                "hi": 0.0405477955,
+                "lo": -0.0487877825,
+                "verdict": "no_difference"
+              },
+              "model": "lightgbm@sensor_like_prev",
+              "sentence": "lightgbm on sensor_like_prev (deployable) shows no demonstrable difference from seasonal climatology (MAE difference -0.004, 90% CI [-0.049, +0.041])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": -0.0207073718,
+                "hi": 0.0483824071,
+                "lo": -0.1016600882,
+                "verdict": "no_difference"
+              },
+              "model": "ridge@sensor_like_plus_tss",
+              "sentence": "ridge on sensor_like_plus_tss (diagnostic, not deployable) shows no demonstrable difference from persistence (MAE difference -0.021, 90% CI [-0.102, +0.048])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": -0.0049410661,
+                "hi": 0.0061426598,
+                "lo": -0.0165034469,
+                "verdict": "no_difference"
+              },
+              "model": "ridge@sensor_like_plus_tss",
+              "sentence": "ridge on sensor_like_plus_tss (diagnostic, not deployable) shows no demonstrable difference from seasonal climatology (MAE difference -0.005, 90% CI [-0.017, +0.006])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": -0.017361285,
+                "hi": 0.0443856732,
+                "lo": -0.0935351638,
+                "verdict": "no_difference"
+              },
+              "model": "random_forest@sensor_like_plus_tss",
+              "sentence": "random_forest on sensor_like_plus_tss (diagnostic, not deployable) shows no demonstrable difference from persistence (MAE difference -0.017, 90% CI [-0.094, +0.044])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": -0.0015949793,
+                "hi": 0.0043821835,
+                "lo": -0.0068915679,
+                "verdict": "no_difference"
+              },
+              "model": "random_forest@sensor_like_plus_tss",
+              "sentence": "random_forest on sensor_like_plus_tss (diagnostic, not deployable) shows no demonstrable difference from seasonal climatology (MAE difference -0.002, 90% CI [-0.007, +0.004])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "persistence",
+              "mae": {
+                "diff": 0.0106017645,
+                "hi": 0.0599118779,
+                "lo": -0.0431985685,
+                "verdict": "no_difference"
+              },
+              "model": "lightgbm@sensor_like_plus_tss",
+              "sentence": "lightgbm on sensor_like_plus_tss (diagnostic, not deployable) shows no demonstrable difference from persistence (MAE difference +0.011, 90% CI [-0.043, +0.060])",
+              "verdict": "no_difference"
+            },
+            {
+              "baseline": "seasonal_climatology",
+              "mae": {
+                "diff": 0.0263680702,
+                "hi": 0.0550563671,
+                "lo": -0.0011262967,
+                "verdict": "no_difference"
+              },
+              "model": "lightgbm@sensor_like_plus_tss",
+              "sentence": "lightgbm on sensor_like_plus_tss (diagnostic, not deployable) shows no demonstrable difference from seasonal climatology (MAE difference +0.026, 90% CI [-0.001, +0.055])",
+              "verdict": "no_difference"
+            }
+          ],
+          "n": 7,
+          "n_censored": 0,
+          "n_dates": 7,
+          "predictors": {
+            "lightgbm@sensor_like": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.1798845877,
+                  "lo": 0.0852052972,
+                  "n_boot_defined": 1000,
+                  "value": 0.1311112645
+                },
+                "mae_log": {
+                  "hi": 0.1481596833,
+                  "lo": 0.073781965,
+                  "n_boot_defined": 1000,
+                  "value": 0.1101513053
+                },
+                "r2": {
+                  "hi": -0.4959234703,
+                  "lo": -5.3119528785,
+                  "n_boot_defined": 1000,
+                  "value": -1.0874961713
+                },
+                "rmse": {
+                  "hi": 0.1968328255,
+                  "lo": 0.0935813571,
+                  "n_boot_defined": 1000,
+                  "value": 0.1516946925
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.4488640139,
+                  "lo": -0.4537623391,
+                  "n_boot_defined": 1000,
+                  "value": 0.0339169986
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.0347229568,
+                  "lo": -0.3723688228,
+                  "n_boot_defined": 1000,
+                  "value": -0.0930677154
+                }
+              }
+            },
+            "lightgbm@sensor_like_plus_tss": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.1921143084,
+                  "lo": 0.1061301845,
+                  "n_boot_defined": 1000,
+                  "value": 0.1463160502
+                },
+                "mae_log": {
+                  "hi": 0.1579509741,
+                  "lo": 0.0906059996,
+                  "n_boot_defined": 1000,
+                  "value": 0.1225862131
+                },
+                "r2": {
+                  "hi": -0.75209539,
+                  "lo": -6.6827707402,
+                  "n_boot_defined": 1000,
+                  "value": -1.3989988542
+                },
+                "rmse": {
+                  "hi": 0.2135359639,
+                  "lo": 0.1113165273,
+                  "n_boot_defined": 1000,
+                  "value": 0.1626194779
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.2654126691,
+                  "lo": -0.5199390362,
+                  "n_boot_defined": 1000,
+                  "value": -0.0781182646
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.0070185086,
+                  "lo": -0.7915513251,
+                  "n_boot_defined": 1000,
+                  "value": -0.2198292141
+                }
+              }
+            },
+            "lightgbm@sensor_like_prev": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.1728109078,
+                  "lo": 0.0608928712,
+                  "n_boot_defined": 1000,
+                  "value": 0.115816343
+                },
+                "mae_log": {
+                  "hi": 0.1454199703,
+                  "lo": 0.0521853843,
+                  "n_boot_defined": 1000,
+                  "value": 0.0975137744
+                },
+                "r2": {
+                  "hi": -0.0057262316,
+                  "lo": -4.5145242929,
+                  "n_boot_defined": 1000,
+                  "value": -0.9775144257
+                },
+                "rmse": {
+                  "hi": 0.2000132006,
+                  "lo": 0.0720706445,
+                  "n_boot_defined": 1000,
+                  "value": 0.1476445336
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.5186511403,
+                  "lo": -0.3091821759,
+                  "n_boot_defined": 1000,
+                  "value": 0.1466164199
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.354873979,
+                  "lo": -0.4524086173,
+                  "n_boot_defined": 1000,
+                  "value": 0.0344452404
+                }
+              }
+            },
+            "persistence": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.1841428571,
+                  "lo": 0.0951428571,
+                  "n_boot_defined": 1000,
+                  "value": 0.1357142857
+                },
+                "mae_log": {
+                  "hi": 0.1472970567,
+                  "lo": 0.0800216056,
+                  "n_boot_defined": 1000,
+                  "value": 0.1109324797
+                },
+                "r2": {
+                  "hi": -0.0201687448,
+                  "lo": -11.4408197578,
+                  "n_boot_defined": 1000,
+                  "value": -1.1737159953
+                },
+                "rmse": {
+                  "hi": 0.2046779819,
+                  "lo": 0.0987249144,
+                  "n_boot_defined": 1000,
+                  "value": 0.1547957179
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.0,
+                  "lo": 0.0,
+                  "n_boot_defined": 1000,
+                  "value": 0.0
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.2888468092,
+                  "lo": -1.2809016456,
+                  "n_boot_defined": 1000,
+                  "value": -0.1314428613
+                }
+              }
+            },
+            "random_forest@sensor_like": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.1771126643,
+                  "lo": 0.0629236864,
+                  "n_boot_defined": 1000,
+                  "value": 0.1178208257
+                },
+                "mae_log": {
+                  "hi": 0.1462979585,
+                  "lo": 0.0543423237,
+                  "n_boot_defined": 1000,
+                  "value": 0.0989557118
+                },
+                "r2": {
+                  "hi": -0.5045228416,
+                  "lo": -3.9078257773,
+                  "n_boot_defined": 1000,
+                  "value": -1.0509266847
+                },
+                "rmse": {
+                  "hi": 0.206106272,
+                  "lo": 0.0707231712,
+                  "n_boot_defined": 1000,
+                  "value": 0.1503601014
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.5677662666,
+                  "lo": -0.3544003103,
+                  "n_boot_defined": 1000,
+                  "value": 0.1318465473
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.0811124209,
+                  "lo": -0.0630300673,
+                  "n_boot_defined": 1000,
+                  "value": 0.0177339734
+                }
+              }
+            },
+            "random_forest@sensor_like_plus_tss": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.1789906861,
+                  "lo": 0.0644944249,
+                  "n_boot_defined": 1000,
+                  "value": 0.1183530007
+                },
+                "mae_log": {
+                  "hi": 0.1469370977,
+                  "lo": 0.0561653523,
+                  "n_boot_defined": 1000,
+                  "value": 0.0993655952
+                },
+                "r2": {
+                  "hi": -0.4751015536,
+                  "lo": -3.7715380873,
+                  "n_boot_defined": 1000,
+                  "value": -1.0451342157
+                },
+                "rmse": {
+                  "hi": 0.206898787,
+                  "lo": 0.0719740111,
+                  "n_boot_defined": 1000,
+                  "value": 0.1501476189
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.5622856229,
+                  "lo": -0.3629935167,
+                  "n_boot_defined": 1000,
+                  "value": 0.127925258
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.0513455937,
+                  "lo": -0.0566288048,
+                  "n_boot_defined": 1000,
+                  "value": 0.0132972587
+                }
+              }
+            },
+            "random_forest@sensor_like_prev": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.1753355447,
+                  "lo": 0.0727580741,
+                  "n_boot_defined": 1000,
+                  "value": 0.121279745
+                },
+                "mae_log": {
+                  "hi": 0.1444028484,
+                  "lo": 0.0632797206,
+                  "n_boot_defined": 1000,
+                  "value": 0.1017731928
+                },
+                "r2": {
+                  "hi": -0.5663641642,
+                  "lo": -3.3995427938,
+                  "n_boot_defined": 1000,
+                  "value": -0.979569004
+                },
+                "rmse": {
+                  "hi": 0.200772808,
+                  "lo": 0.076362602,
+                  "n_boot_defined": 1000,
+                  "value": 0.1477212128
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.4700705088,
+                  "lo": -0.3034546757,
+                  "n_boot_defined": 1000,
+                  "value": 0.1063597737
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.1208552329,
+                  "lo": -0.2842579489,
+                  "n_boot_defined": 1000,
+                  "value": -0.0111028546
+                }
+              }
+            },
+            "ridge@sensor_like": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.1722325799,
+                  "lo": 0.051350354,
+                  "n_boot_defined": 1000,
+                  "value": 0.1098527131
+                },
+                "mae_log": {
+                  "hi": 0.14321218,
+                  "lo": 0.0441083743,
+                  "n_boot_defined": 1000,
+                  "value": 0.0920604675
+                },
+                "r2": {
+                  "hi": -0.2827269246,
+                  "lo": -3.8011808401,
+                  "n_boot_defined": 1000,
+                  "value": -0.9938916591
+                },
+                "rmse": {
+                  "hi": 0.2054606102,
+                  "lo": 0.0660398437,
+                  "n_boot_defined": 1000,
+                  "value": 0.1482546488
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.6424104691,
+                  "lo": -0.3298023972,
+                  "n_boot_defined": 1000,
+                  "value": 0.190558956
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.2338314923,
+                  "lo": 0.0153458388,
+                  "n_boot_defined": 1000,
+                  "value": 0.0841637091
+                }
+              }
+            },
+            "ridge@sensor_like_plus_tss": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.1775717481,
+                  "lo": 0.0551546011,
+                  "n_boot_defined": 1000,
+                  "value": 0.1150069139
+                },
+                "mae_log": {
+                  "hi": 0.1476529684,
+                  "lo": 0.047179738,
+                  "n_boot_defined": 1000,
+                  "value": 0.0959996794
+                },
+                "r2": {
+                  "hi": -0.4123377708,
+                  "lo": -4.048428108,
+                  "n_boot_defined": 1000,
+                  "value": -1.0905145638
+                },
+                "rmse": {
+                  "hi": 0.2073662143,
+                  "lo": 0.0714803435,
+                  "n_boot_defined": 1000,
+                  "value": 0.1518043235
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.6175341281,
+                  "lo": -0.3942409548,
+                  "n_boot_defined": 1000,
+                  "value": 0.1525806342
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.1829953679,
+                  "lo": -0.0589577353,
+                  "n_boot_defined": 1000,
+                  "value": 0.0411934081
+                }
+              }
+            },
+            "ridge@sensor_like_prev": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.1802314184,
+                  "lo": 0.0797195129,
+                  "n_boot_defined": 1000,
+                  "value": 0.1279004874
+                },
+                "mae_log": {
+                  "hi": 0.1494765814,
+                  "lo": 0.0694053037,
+                  "n_boot_defined": 1000,
+                  "value": 0.1077371966
+                },
+                "r2": {
+                  "hi": -0.6534651636,
+                  "lo": -3.9781911557,
+                  "n_boot_defined": 1000,
+                  "value": -1.1341628951
+                },
+                "rmse": {
+                  "hi": 0.2055185591,
+                  "lo": 0.0825619221,
+                  "n_boot_defined": 1000,
+                  "value": 0.1533809151
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.420386743,
+                  "lo": -0.3545211037,
+                  "n_boot_defined": 1000,
+                  "value": 0.0575753561
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.0527023327,
+                  "lo": -0.3410142555,
+                  "n_boot_defined": 1000,
+                  "value": -0.0662996357
+                }
+              }
+            },
+            "seasonal_climatology": {
+              "metrics": {
+                "mae": {
+                  "hi": 0.1819243373,
+                  "lo": 0.0619359004,
+                  "n_boot_defined": 1000,
+                  "value": 0.11994798
+                },
+                "mae_log": {
+                  "hi": 0.151204173,
+                  "lo": 0.0548050239,
+                  "n_boot_defined": 1000,
+                  "value": 0.1011366256
+                },
+                "r2": {
+                  "hi": -0.4801009032,
+                  "lo": -4.0937787664,
+                  "n_boot_defined": 1000,
+                  "value": -1.1611580044
+                },
+                "rmse": {
+                  "hi": 0.2142295287,
+                  "lo": 0.0691211391,
+                  "n_boot_defined": 1000,
+                  "value": 0.1543479274
+                },
+                "skill_vs_persistence": {
+                  "hi": 0.5615754225,
+                  "lo": -0.4061667955,
+                  "n_boot_defined": 1000,
+                  "value": 0.1161727788
+                },
+                "skill_vs_seasonal_climatology": {
+                  "hi": 0.0,
+                  "lo": 0.0,
+                  "n_boot_defined": 1000,
+                  "value": 0.0
+                }
+              }
+            }
+          }
+        },
+        "slices": {
+          "apr_sep": {
+            "differences": [],
+            "n": 4,
+            "n_censored": 0,
+            "n_dates": 4,
+            "predictors": {
+              "lightgbm@sensor_like": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.2169629615,
+                    "lo": 0.0830959523,
+                    "n_boot_defined": 1000,
+                    "value": 0.1439919706
+                  },
+                  "mae_log": {
+                    "hi": 0.1741661667,
+                    "lo": 0.0711684901,
+                    "n_boot_defined": 1000,
+                    "value": 0.1198730348
+                  },
+                  "r2": {
+                    "hi": -0.3189373437,
+                    "lo": -7.8666372958,
+                    "n_boot_defined": 989,
+                    "value": -0.9381371694
+                  },
+                  "rmse": {
+                    "hi": 0.2352607744,
+                    "lo": 0.0869910162,
+                    "n_boot_defined": 1000,
+                    "value": 0.163733924
+                  },
+                  "skill_vs_persistence": {
+                    "hi": -0.0703917367,
+                    "lo": -0.5506151193,
+                    "n_boot_defined": 1000,
+                    "value": -0.3363523951
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.1061337584,
+                    "lo": -0.3891938039,
+                    "n_boot_defined": 1000,
+                    "value": -0.0422330828
+                  }
+                }
+              },
+              "lightgbm@sensor_like_plus_tss": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.2396277136,
+                    "lo": 0.1023166797,
+                    "n_boot_defined": 1000,
+                    "value": 0.1620668628
+                  },
+                  "mae_log": {
+                    "hi": 0.1945238789,
+                    "lo": 0.0859320951,
+                    "n_boot_defined": 1000,
+                    "value": 0.1350574609
+                  },
+                  "r2": {
+                    "hi": -0.7000752878,
+                    "lo": -11.0104353977,
+                    "n_boot_defined": 989,
+                    "value": -1.4314900737
+                  },
+                  "rmse": {
+                    "hi": 0.2607139156,
+                    "lo": 0.1100760575,
+                    "n_boot_defined": 1000,
+                    "value": 0.1833929622
+                  },
+                  "skill_vs_persistence": {
+                    "hi": -0.1088346248,
+                    "lo": -0.8319536024,
+                    "n_boot_defined": 1000,
+                    "value": -0.5041008152
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.0198079535,
+                    "lo": -0.6546761031,
+                    "n_boot_defined": 1000,
+                    "value": -0.1730615631
+                  }
+                }
+              },
+              "lightgbm@sensor_like_prev": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.1691275875,
+                    "lo": 0.0468955518,
+                    "n_boot_defined": 1000,
+                    "value": 0.0938285936
+                  },
+                  "mae_log": {
+                    "hi": 0.1319573341,
+                    "lo": 0.0405280773,
+                    "n_boot_defined": 1000,
+                    "value": 0.0770482145
+                  },
+                  "r2": {
+                    "hi": 0.1898588955,
+                    "lo": -2.584172101,
+                    "n_boot_defined": 989,
+                    "value": 0.0078627871
+                  },
+                  "rmse": {
+                    "hi": 0.1854199879,
+                    "lo": 0.0495312969,
+                    "n_boot_defined": 1000,
+                    "value": 0.1171473003
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.4450817279,
+                    "lo": -0.0720130599,
+                    "n_boot_defined": 1000,
+                    "value": 0.1292009874
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.5282784431,
+                    "lo": 0.0276539695,
+                    "n_boot_defined": 1000,
+                    "value": 0.3208561284
+                  }
+                }
+              },
+              "persistence": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.15575,
+                    "lo": 0.0745,
+                    "n_boot_defined": 1000,
+                    "value": 0.10775
+                  },
+                  "mae_log": {
+                    "hi": 0.1213798275,
+                    "lo": 0.063800341,
+                    "n_boot_defined": 1000,
+                    "value": 0.0877814942
+                  },
+                  "r2": {
+                    "hi": 0.2280724619,
+                    "lo": -3.5787312572,
+                    "n_boot_defined": 989,
+                    "value": -0.0172423142
+                  },
+                  "rmse": {
+                    "hi": 0.1660564663,
+                    "lo": 0.0769707737,
+                    "n_boot_defined": 1000,
+                    "value": 0.1186201922
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.0,
+                    "lo": 0.0,
+                    "n_boot_defined": 1000,
+                    "value": 0.0
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.3453018554,
+                    "lo": -0.2371211577,
+                    "n_boot_defined": 1000,
+                    "value": 0.2200911327
+                  }
+                }
+              },
+              "random_forest@sensor_like": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.2324781611,
+                    "lo": 0.0642479328,
+                    "n_boot_defined": 1000,
+                    "value": 0.1330795958
+                  },
+                  "mae_log": {
+                    "hi": 0.1874962342,
+                    "lo": 0.0572684718,
+                    "n_boot_defined": 1000,
+                    "value": 0.1113430805
+                  },
+                  "r2": {
+                    "hi": -0.4509460651,
+                    "lo": -9.4378925899,
+                    "n_boot_defined": 989,
+                    "value": -0.9917911253
+                  },
+                  "rmse": {
+                    "hi": 0.257836147,
+                    "lo": 0.0658369505,
+                    "n_boot_defined": 1000,
+                    "value": 0.1659847969
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.173660028,
+                    "lo": -0.4771712118,
+                    "n_boot_defined": 1000,
+                    "value": -0.235077455
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.1179045226,
+                    "lo": -0.0905866501,
+                    "n_boot_defined": 1000,
+                    "value": 0.036752141
+                  }
+                }
+              },
+              "random_forest@sensor_like_plus_tss": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.2384798472,
+                    "lo": 0.0645984088,
+                    "n_boot_defined": 1000,
+                    "value": 0.1366779463
+                  },
+                  "mae_log": {
+                    "hi": 0.1927901486,
+                    "lo": 0.0574847533,
+                    "n_boot_defined": 1000,
+                    "value": 0.1144804736
+                  },
+                  "r2": {
+                    "hi": -0.4964193132,
+                    "lo": -9.8106818341,
+                    "n_boot_defined": 989,
+                    "value": -1.0685557243
+                  },
+                  "rmse": {
+                    "hi": 0.2626271348,
+                    "lo": 0.0653094918,
+                    "n_boot_defined": 1000,
+                    "value": 0.1691531257
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.154144772,
+                    "lo": -0.4971096931,
+                    "n_boot_defined": 1000,
+                    "value": -0.2684728192
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.0613218877,
+                    "lo": -0.0942238989,
+                    "n_boot_defined": 1000,
+                    "value": 0.0107068003
+                  }
+                }
+              },
+              "random_forest@sensor_like_prev": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.2306070715,
+                    "lo": 0.0673204673,
+                    "n_boot_defined": 1000,
+                    "value": 0.1291159658
+                  },
+                  "mae_log": {
+                    "hi": 0.186066723,
+                    "lo": 0.0591692635,
+                    "n_boot_defined": 1000,
+                    "value": 0.1079486689
+                  },
+                  "r2": {
+                    "hi": -0.4356722461,
+                    "lo": -8.9677023484,
+                    "n_boot_defined": 989,
+                    "value": -0.8776432561
+                  },
+                  "rmse": {
+                    "hi": 0.2542354663,
+                    "lo": 0.0697199448,
+                    "n_boot_defined": 1000,
+                    "value": 0.1611584032
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.1199856552,
+                    "lo": -0.4622121756,
+                    "n_boot_defined": 1000,
+                    "value": -0.1982920261
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.1343307903,
+                    "lo": -0.0769430185,
+                    "n_boot_defined": 1000,
+                    "value": 0.0654414232
+                  }
+                }
+              },
+              "ridge@sensor_like": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.2303859035,
+                    "lo": 0.0332810228,
+                    "n_boot_defined": 1000,
+                    "value": 0.1209447093
+                  },
+                  "mae_log": {
+                    "hi": 0.185928121,
+                    "lo": 0.0301282086,
+                    "n_boot_defined": 1000,
+                    "value": 0.1008664783
+                  },
+                  "r2": {
+                    "hi": 0.1804470862,
+                    "lo": -9.4350506662,
+                    "n_boot_defined": 989,
+                    "value": -0.9017181324
+                  },
+                  "rmse": {
+                    "hi": 0.2576784726,
+                    "lo": 0.0333202354,
+                    "n_boot_defined": 1000,
+                    "value": 0.1621882876
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.5033206023,
+                    "lo": -0.4451132494,
+                    "n_boot_defined": 1000,
+                    "value": -0.1224566984
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.3969142052,
+                    "lo": 0.070049701,
+                    "n_boot_defined": 1000,
+                    "value": 0.1245860677
+                  }
+                }
+              },
+              "ridge@sensor_like_plus_tss": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.2308257097,
+                    "lo": 0.052043157,
+                    "n_boot_defined": 1000,
+                    "value": 0.1313795664
+                  },
+                  "mae_log": {
+                    "hi": 0.186668105,
+                    "lo": 0.0442194473,
+                    "n_boot_defined": 1000,
+                    "value": 0.1090305753
+                  },
+                  "r2": {
+                    "hi": -0.4230478535,
+                    "lo": -9.674925299,
+                    "n_boot_defined": 989,
+                    "value": -1.0312477237
+                  },
+                  "rmse": {
+                    "hi": 0.2607075782,
+                    "lo": 0.0629776215,
+                    "n_boot_defined": 1000,
+                    "value": 0.1676207813
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.2617991908,
+                    "lo": -0.5672300712,
+                    "n_boot_defined": 1000,
+                    "value": -0.2192999204
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.2140325555,
+                    "lo": -0.1035225155,
+                    "n_boot_defined": 1000,
+                    "value": 0.0490571801
+                  }
+                }
+              },
+              "ridge@sensor_like_prev": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.2344823717,
+                    "lo": 0.0638048838,
+                    "n_boot_defined": 1000,
+                    "value": 0.1308459725
+                  },
+                  "mae_log": {
+                    "hi": 0.1895919871,
+                    "lo": 0.0571885898,
+                    "n_boot_defined": 1000,
+                    "value": 0.1095783599
+                  },
+                  "r2": {
+                    "hi": -0.4608106084,
+                    "lo": -9.4315460028,
+                    "n_boot_defined": 989,
+                    "value": -0.9569251435
+                  },
+                  "rmse": {
+                    "hi": 0.2592764039,
+                    "lo": 0.0649428403,
+                    "n_boot_defined": 1000,
+                    "value": 0.1645256145
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.1793584076,
+                    "lo": -0.4814152072,
+                    "n_boot_defined": 1000,
+                    "value": -0.2143477729
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.1351648249,
+                    "lo": -0.0160973356,
+                    "n_boot_defined": 1000,
+                    "value": 0.0529194039
+                  }
+                }
+              },
+              "seasonal_climatology": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.248969699,
+                    "lo": 0.0576159147,
+                    "n_boot_defined": 1000,
+                    "value": 0.1381571675
+                  },
+                  "mae_log": {
+                    "hi": 0.2031581972,
+                    "lo": 0.0512365458,
+                    "n_boot_defined": 1000,
+                    "value": 0.1163825245
+                  },
+                  "r2": {
+                    "hi": -0.561949979,
+                    "lo": -10.6298246008,
+                    "n_boot_defined": 989,
+                    "value": -1.1831450534
+                  },
+                  "rmse": {
+                    "hi": 0.2732416835,
+                    "lo": 0.0576543775,
+                    "n_boot_defined": 1000,
+                    "value": 0.1737751656
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.1916717342,
+                    "lo": -0.5274214664,
+                    "n_boot_defined": 1000,
+                    "value": -0.2822010902
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.0,
+                    "lo": 0.0,
+                    "n_boot_defined": 1000,
+                    "value": 0.0
+                  }
+                }
+              }
+            }
+          },
+          "oct_mar": {
+            "differences": [],
+            "n": 3,
+            "n_censored": 0,
+            "n_dates": 3,
+            "predictors": {
+              "lightgbm@sensor_like": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.1693551969,
+                    "lo": 0.0585187824,
+                    "n_boot_defined": 1000,
+                    "value": 0.1139369897
+                  },
+                  "mae_log": {
+                    "hi": 0.1425411789,
+                    "lo": 0.0518368196,
+                    "n_boot_defined": 1000,
+                    "value": 0.0971889993
+                  },
+                  "r2": {
+                    "hi": -0.7376244066,
+                    "lo": -7.035221781,
+                    "n_boot_defined": 931,
+                    "value": -1.5054488779
+                  },
+                  "rmse": {
+                    "hi": 0.1790595446,
+                    "lo": 0.0619154581,
+                    "n_boot_defined": 1000,
+                    "value": 0.1339698557
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.7429628883,
+                    "lo": -0.4311706784,
+                    "n_boot_defined": 1000,
+                    "value": 0.3414046839
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": -0.0652783174,
+                    "lo": -0.6342764816,
+                    "n_boot_defined": 1000,
+                    "value": -0.1909491494
+                  }
+                }
+              },
+              "lightgbm@sensor_like_plus_tss": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.153077919,
+                    "lo": 0.0975520143,
+                    "n_boot_defined": 1000,
+                    "value": 0.1253149667
+                  },
+                  "mae_log": {
+                    "hi": 0.1268056511,
+                    "lo": 0.0851101142,
+                    "n_boot_defined": 1000,
+                    "value": 0.1059578826
+                  },
+                  "r2": {
+                    "hi": -1.1180452846,
+                    "lo": -10.5583904748,
+                    "n_boot_defined": 931,
+                    "value": -1.3537542437
+                  },
+                  "rmse": {
+                    "hi": 0.1544769534,
+                    "lo": 0.0992943576,
+                    "n_boot_defined": 1000,
+                    "value": 0.1298508733
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.5139942105,
+                    "lo": -0.1829516781,
+                    "n_boot_defined": 1000,
+                    "value": 0.2756360308
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.0999695511,
+                    "lo": -2.0900900904,
+                    "n_boot_defined": 1000,
+                    "value": -0.3098797271
+                  }
+                }
+              },
+              "lightgbm@sensor_like_prev": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.2320816415,
+                    "lo": 0.0581850429,
+                    "n_boot_defined": 1000,
+                    "value": 0.1451333422
+                  },
+                  "mae_log": {
+                    "hi": 0.1997107497,
+                    "lo": 0.0498916253,
+                    "n_boot_defined": 1000,
+                    "value": 0.1248011875
+                  },
+                  "r2": {
+                    "hi": -3.0834903528,
+                    "lo": -12.5765655256,
+                    "n_boot_defined": 931,
+                    "value": -3.5460850427
+                  },
+                  "rmse": {
+                    "hi": 0.2436626756,
+                    "lo": 0.0758997105,
+                    "n_boot_defined": 1000,
+                    "value": 0.1804608898
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.6437650436,
+                    "lo": -0.6700246528,
+                    "n_boot_defined": 1000,
+                    "value": 0.1610789468
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": -0.0475481608,
+                    "lo": -1.5873911102,
+                    "n_boot_defined": 1000,
+                    "value": -0.5170352572
+                  }
+                }
+              },
+              "persistence": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.2373333333,
+                    "lo": 0.1086666667,
+                    "n_boot_defined": 1000,
+                    "value": 0.173
+                  },
+                  "mae_log": {
+                    "hi": 0.1906218134,
+                    "lo": 0.0929791071,
+                    "n_boot_defined": 1000,
+                    "value": 0.1418004603
+                  },
+                  "r2": {
+                    "hi": -2.0061817777,
+                    "lo": -54.202755102,
+                    "n_boot_defined": 931,
+                    "value": -4.1859256732
+                  },
+                  "rmse": {
+                    "hi": 0.2496076922,
+                    "lo": 0.1095232091,
+                    "n_boot_defined": 1000,
+                    "value": 0.192742488
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.0,
+                    "lo": 0.0,
+                    "n_boot_defined": 1000,
+                    "value": 0.0
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.2391654997,
+                    "lo": -5.3581343203,
+                    "n_boot_defined": 1000,
+                    "value": -0.8083170656
+                  }
+                }
+              },
+              "random_forest@sensor_like": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.1579486704,
+                    "lo": 0.0370029276,
+                    "n_boot_defined": 1000,
+                    "value": 0.097475799
+                  },
+                  "mae_log": {
+                    "hi": 0.1322230275,
+                    "lo": 0.0326554128,
+                    "n_boot_defined": 1000,
+                    "value": 0.0824392201
+                  },
+                  "r2": {
+                    "hi": -0.3617036119,
+                    "lo": -6.6569158459,
+                    "n_boot_defined": 931,
+                    "value": -1.2360083234
+                  },
+                  "rmse": {
+                    "hi": 0.1747935804,
+                    "lo": 0.0385064142,
+                    "n_boot_defined": 1000,
+                    "value": 0.1265613284
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.8374688393,
+                    "lo": -0.3347774962,
+                    "n_boot_defined": 1000,
+                    "value": 0.4365560752
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.0272771973,
+                    "lo": -0.0496139256,
+                    "n_boot_defined": 1000,
+                    "value": -0.0188852647
+                  }
+                }
+              },
+              "random_forest@sensor_like_plus_tss": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.1504455536,
+                    "lo": 0.0373939263,
+                    "n_boot_defined": 1000,
+                    "value": 0.0939197399
+                  },
+                  "mae_log": {
+                    "hi": 0.1254220382,
+                    "lo": 0.0330028097,
+                    "n_boot_defined": 1000,
+                    "value": 0.0792124239
+                  },
+                  "r2": {
+                    "hi": -0.395248198,
+                    "lo": -5.8634652325,
+                    "n_boot_defined": 931,
+                    "value": -1.0175750385
+                  },
+                  "rmse": {
+                    "hi": 0.1654894302,
+                    "lo": 0.0389778175,
+                    "n_boot_defined": 1000,
+                    "value": 0.1202206757
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.8357514219,
+                    "lo": -0.2713708753,
+                    "n_boot_defined": 1000,
+                    "value": 0.4571113299
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.0373991806,
+                    "lo": -0.0443145216,
+                    "n_boot_defined": 1000,
+                    "value": 0.0182851531
+                  }
+                }
+              },
+              "random_forest@sensor_like_prev": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.1616835114,
+                    "lo": 0.0599793898,
+                    "n_boot_defined": 1000,
+                    "value": 0.1108314506
+                  },
+                  "mae_log": {
+                    "hi": 0.1350444403,
+                    "lo": 0.0520340091,
+                    "n_boot_defined": 1000,
+                    "value": 0.0935392247
+                  },
+                  "r2": {
+                    "hi": -1.0216119138,
+                    "lo": -5.5048100559,
+                    "n_boot_defined": 931,
+                    "value": -1.2736741521
+                  },
+                  "rmse": {
+                    "hi": 0.1684158945,
+                    "lo": 0.0648942886,
+                    "n_boot_defined": 1000,
+                    "value": 0.1276228471
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.6596027093,
+                    "lo": -0.2183024053,
+                    "n_boot_defined": 1000,
+                    "value": 0.359355777
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.1167481238,
+                    "lo": -1.1642916967,
+                    "n_boot_defined": 1000,
+                    "value": -0.1584878813
+                  }
+                }
+              },
+              "ridge@sensor_like": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.1619941113,
+                    "lo": 0.0281326586,
+                    "n_boot_defined": 1000,
+                    "value": 0.0950633849
+                  },
+                  "mae_log": {
+                    "hi": 0.135842961,
+                    "lo": 0.0247952787,
+                    "n_boot_defined": 1000,
+                    "value": 0.0803191198
+                  },
+                  "r2": {
+                    "hi": -0.3470998497,
+                    "lo": -6.7582413675,
+                    "n_boot_defined": 931,
+                    "value": -1.2631184275
+                  },
+                  "rmse": {
+                    "hi": 0.1759463188,
+                    "lo": 0.0382993741,
+                    "n_boot_defined": 1000,
+                    "value": 0.1273262525
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.8764304894,
+                    "lo": -0.3689643206,
+                    "n_boot_defined": 1000,
+                    "value": 0.4505006652
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.2143284536,
+                    "lo": -0.0737545999,
+                    "n_boot_defined": 1000,
+                    "value": 0.0063309753
+                  }
+                }
+              },
+              "ridge@sensor_like_plus_tss": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.1625637689,
+                    "lo": 0.0237896523,
+                    "n_boot_defined": 1000,
+                    "value": 0.0931767106
+                  },
+                  "mae_log": {
+                    "hi": 0.1363622978,
+                    "lo": 0.0208880054,
+                    "n_boot_defined": 1000,
+                    "value": 0.0786251516
+                  },
+                  "r2": {
+                    "hi": -0.2894330775,
+                    "lo": -6.8222692998,
+                    "n_boot_defined": 931,
+                    "value": -1.2765679617
+                  },
+                  "rmse": {
+                    "hi": 0.17667086,
+                    "lo": 0.0374706465,
+                    "n_boot_defined": 1000,
+                    "value": 0.127704037
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.8955066518,
+                    "lo": -0.3737783289,
+                    "n_boot_defined": 1000,
+                    "value": 0.4614062971
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.3356172564,
+                    "lo": -0.0757186986,
+                    "n_boot_defined": 1000,
+                    "value": 0.0260518157
+                  }
+                }
+              },
+              "ridge@sensor_like_prev": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.1691163113,
+                    "lo": 0.0788300364,
+                    "n_boot_defined": 1000,
+                    "value": 0.1239731739
+                  },
+                  "mae_log": {
+                    "hi": 0.141712218,
+                    "lo": 0.0688524065,
+                    "n_boot_defined": 1000,
+                    "value": 0.1052823123
+                  },
+                  "r2": {
+                    "hi": -1.1927582458,
+                    "lo": -6.4570071034,
+                    "n_boot_defined": 931,
+                    "value": -1.6246381972
+                  },
+                  "rmse": {
+                    "hi": 0.1767257824,
+                    "lo": 0.0798215566,
+                    "n_boot_defined": 1000,
+                    "value": 0.1371194426
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.614793427,
+                    "lo": -0.3542055037,
+                    "n_boot_defined": 1000,
+                    "value": 0.2833920586
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": -0.0303262677,
+                    "lo": -1.4491951324,
+                    "n_boot_defined": 1000,
+                    "value": -0.2958543698
+                  }
+                }
+              },
+              "seasonal_climatology": {
+                "metrics": {
+                  "mae": {
+                    "hi": 0.1555309772,
+                    "lo": 0.0358071496,
+                    "n_boot_defined": 1000,
+                    "value": 0.0956690634
+                  },
+                  "mae_log": {
+                    "hi": 0.13000663,
+                    "lo": 0.0316108908,
+                    "n_boot_defined": 1000,
+                    "value": 0.0808087604
+                  },
+                  "r2": {
+                    "hi": -0.360384099,
+                    "lo": -6.3094985678,
+                    "n_boot_defined": 931,
+                    "value": -1.1391493729
+                  },
+                  "rmse": {
+                    "hi": 0.170782094,
+                    "lo": 0.038487753,
+                    "n_boot_defined": 1000,
+                    "value": 0.1237898032
+                  },
+                  "skill_vs_persistence": {
+                    "hi": 0.8427211585,
+                    "lo": -0.3143462864,
+                    "n_boot_defined": 1000,
+                    "value": 0.4469996335
+                  },
+                  "skill_vs_seasonal_climatology": {
+                    "hi": 0.0,
+                    "lo": 0.0,
+                    "n_boot_defined": 1000,
+                    "value": 0.0
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "warnings": [
+        "[regression] fold 2018 skipped: 14 training labels, fewer than min_train_labels=20.",
+        "[regression] fold 2019 skipped: 15 training labels, fewer than min_train_labels=20.",
+        "[regression] fold 2020 skipped: 19 training labels, fewer than min_train_labels=20.",
+        "[regression] n_train below 50 in: 2021 (21), 2022 (24), 2023 (26), holdout (28).",
+        "[regression] only 7 walk-forward residuals (fewer than 30): the conformal intervals are not meaningful.",
+        "[regression] feature set sensor_like: only 20% of the 5 labels in 2025 and 2026 have every feature (below 50%); the rest are imputed.",
+        "[regression] feature set sensor_like_prev: only 20% of the 5 labels in 2025 and 2026 have every feature (below 50%); the rest are imputed.",
+        "[regression] feature set sensor_like_plus_tss: only 20% of the 5 labels in 2025 and 2026 have every feature (below 50%); the rest are imputed.",
+        "[regression] 5 of 6 station-years in the test windows have fewer than 4 labels (minimum 1)."
+      ]
+    }
+  },
+  "task": "crp_tp_13202",
+  "warnings": [
+    "[regression] fold 2018 skipped: 14 training labels, fewer than min_train_labels=20.",
+    "[regression] fold 2019 skipped: 15 training labels, fewer than min_train_labels=20.",
+    "[regression] fold 2020 skipped: 19 training labels, fewer than min_train_labels=20.",
+    "[regression] n_train below 50 in: 2021 (21), 2022 (24), 2023 (26), holdout (28).",
+    "[regression] only 7 walk-forward residuals (fewer than 30): the conformal intervals are not meaningful.",
+    "[regression] feature set sensor_like: only 20% of the 5 labels in 2025 and 2026 have every feature (below 50%); the rest are imputed.",
+    "[regression] feature set sensor_like_prev: only 20% of the 5 labels in 2025 and 2026 have every feature (below 50%); the rest are imputed.",
+    "[regression] feature set sensor_like_plus_tss: only 20% of the 5 labels in 2025 and 2026 have every feature (below 50%); the rest are imputed.",
+    "[regression] 5 of 6 station-years in the test windows have fewer than 4 labels (minimum 1)."
+  ]
+}

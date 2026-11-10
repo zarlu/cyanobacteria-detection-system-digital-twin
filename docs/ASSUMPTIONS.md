@@ -286,3 +286,85 @@ the repository owner: `ml/data/`, `tests/ml/`, `docs/crp_schema.md` and this fil
   them without numeric water temp, pH or flow. Neither side was adjusted.
 
 Blockers (Phase 4a): none.
+
+## Phase 4b: ML harness and the CRP tasks (2026-11-10)
+
+Branch `feat/p4b-ml-harness`, created from `feat/p4a-crp-data` (4a was not merged).
+
+- **Dependencies.** The `ml` extra was not installed in the shared environment; `uv sync --extra ml`
+  installed it. Two exact pins were added to the `ml` extra in `pyproject.toml`: `scipy==1.18.1`
+  (the version scikit-learn 1.9.1 already resolved to) and `matplotlib==3.11.2`. On macOS LightGBM
+  also needs the system OpenMP runtime: `brew install libomp` (not a Python package, so it cannot
+  be pinned in `pyproject.toml`; it belongs in the README setup notes, which this task may not edit).
+- **Tests that need the `ml` extra** (`tests/ml/test_models.py`, `test_drills.py`, `test_run.py`)
+  are skipped with `pytest.importorskip` when scikit-learn, LightGBM or matplotlib is missing, as
+  4a did for openpyxl. After `make setup` alone they skip; after `make setup-ml` they run.
+- **Task specs use `extends`.** `ml/tasks/_crp_base.yaml` (marked `abstract`) holds the shared
+  settings; a task file merges over it (dicts merge, lists and scalars are replaced). A task's
+  `fast:` block is merged over it only for `--fast`. This is loader behaviour, not task logic.
+- **Seasonal climatology widens CLAUDE.md's "same month".** It is the mean of the training
+  targets whose calendar month is within plus or minus one month of the test month (December and
+  January are adjacent), because there are only about two or three labels per station and
+  calendar month. With fewer than 3 training labels in the window it is the mean of all training
+  targets. It is pooled over the task's stations (not per station) for the same reason.
+- **Climatology for regression targets** is the mean on the transformed (log1p) scale,
+  back-transformed, so it is on the same footing as the models, which are fitted on that scale.
+- **Persistence uses the latest label known at issue time**, including a label that falls inside
+  the test year or inside the 14-day gap: "the last sample at this station, carried forward". The
+  gap restricts what a model may be trained on, not what the baseline may look at. The same holds
+  for the `prev_label_*` features. This assumes the previous sample's lab result is back before
+  the next visit (visits are 56 to 112 days apart); the lab turnaround time is a PLACEHOLDER.
+- **Labels before `start` are not used at all**, not even as a "previous label".
+- **Total phosphorus targets use log1p** ("regression on the log scale" in the brief; CLAUDE.md
+  section 8 says log1p for concentrations). Feature transforms follow the brief: `log` for
+  specific conductance, total phosphorus and TSS; `log1p` for discharge and the previous label.
+- **Censored values.** A left-censored target enters the regression at detection limit / 2 with
+  a `censored` flag, and metrics are reported on all labels and on numeric-only labels. For the
+  event target, `<x` with x <= threshold is a negative and `<x` with x > threshold is dropped
+  (counted in the report). A right-censored target is dropped from both targets and counted
+  (the brief defined this for chlorophyll; total phosphorus is treated the same way). A censored
+  value in a *feature* channel (for example total phosphorus `<0.05` in `lab_same_visit`) enters
+  at its stored value, detection limit / 2.
+- **Regression predictions are clipped at zero** concentration before any metric is computed.
+- **Final hold-out size** is `ceil(final_holdout_frac * distinct dates)` dates. The calendar year
+  that contains the hold-out start is a partial walk-forward test fold (its dates before the
+  hold-out start).
+- **Missing-indicator columns** are decided per fold from the missing pattern of the training and
+  test rows; the medians come from the training rows only. A feature that is entirely missing in
+  a training fold is filled with 0 (its indicator carries the information).
+- **Bootstrap intervals** are plain percentile intervals over 1000 resamples of distinct dates
+  (seed 7). A metric that is undefined on a resample (PR-AUC without positives) is left out of
+  that metric's percentiles; `n_boot_defined` in `metrics.json` says how many were used.
+- **Verdict for event tasks** is decided by PR-AUC; the Brier difference and its interval are
+  printed next to it and can disagree.
+- **Shuffled-label drill.** Event: mean PR-AUC over 5 seeds against the base rate of the
+  out-of-sample labels, margin 0.10 (PLACEHOLDER), exactly as in the brief. Regression (not
+  specified in the brief): mean MAE skill against the training-mean predictor on the transformed
+  scale, same margin. The first version used the training median; it was changed after the first
+  full run because a squared-loss model fitted on shuffled targets estimates the training mean,
+  and on these tasks the mean scores better than the median without any model (for example
+  crp_chla_17410: MAE 0.873 against 0.990, log scale, ad hoc check), which raised flags.
+- **The event rule of the shuffled-label drill raises false alarms on small samples.** PR-AUC of
+  a ranking that ignores the labels is above the base rate when there are few labels (ad hoc
+  check: 0.403 against a base rate of 0.368 at n = 68; 0.686 against 0.571 at n = 7), and five
+  seeds are a noisy mean. The first full run printed LEAKAGE SUSPECTED on 5 of 7 tasks. A 30-seed
+  ad hoc check found mean shuffled-label ROC-AUC at or below 0.5 for every model checked, so no
+  leakage was found. The rule and its margin were NOT changed (that is the owner's decision to make); the report now
+  prints the mean shuffled ROC-AUC and the label-blind expected PR-AUC next to every flag.
+- **Leaky-feature guard** is the truncation check: `assert_no_future_dependence` raises when a
+  feature changes after later rows are removed. The leaky feature (next sample's target) exists
+  only inside `tests/ml/test_drills.py`.
+- **Conformal intervals** use the absolute walk-forward residuals on the transformed scale and
+  are applied to the hold-out predictions; coverage is counted there. Fewer than 30 residuals
+  (PLACEHOLDER) prints a note.
+- **Permutation importance** is the drop in pooled walk-forward PR-AUC (event) or the rise in
+  log-scale MAE (regression) when one raw feature is shuffled within each fold's test rows,
+  5 repeats, nothing refit. SHAP was not built (first item on the cut list).
+- **"Last two calendar years"** in the feature-availability table are the last two calendar years
+  that have labels in the task (2025 and 2026 today), not the wall-clock date.
+- **`--fast` runs** are written to `<UTC-date>-FAST/` so they never overwrite a real report.
+- **`metrics.json` holds no timestamp**, so two runs on the same inputs are byte-identical; the
+  UTC date is only in the folder name.
+- **`ml/__init__.py` was added** (docstring only) so `ml` is a regular package.
+
+Blockers (Phase 4b): none.

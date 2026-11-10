@@ -1,0 +1,15 @@
+# Total phosphorus (mg/L as P, CLAUDE.md rule 9) at three CRP stations, pooled.
+extends: _crp_base
+description: >-
+  Total phosphorus (mg/L as P) at CRP stations 13202, 15816 and 17410, pooled. Regression on
+  the log1p scale. No event target: no threshold is agreed. Features are same-visit readings
+  (a nowcast), not a forecast.
+data:
+  stations: ["13202", "15816", "17410"]
+target:
+  channel: total_phosphorus
+  unit: mg/L as P
+  left_censored_factor: 0.5
+  regression: {transform: log1p}
+targets: [regression]
+use_feature_sets: [sensor_like, sensor_like_prev, sensor_like_plus_tss]

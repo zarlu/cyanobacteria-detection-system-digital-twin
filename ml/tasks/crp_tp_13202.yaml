@@ -1,0 +1,7 @@
+# Single-station copy of crp_tp_pooled (no station one-hot).
+extends: crp_tp_pooled
+description: >-
+  Total phosphorus (mg/L as P) at CRP station 13202 only. Regression on the log1p scale.
+  No event target: no threshold is agreed.
+data:
+  stations: ["13202"]

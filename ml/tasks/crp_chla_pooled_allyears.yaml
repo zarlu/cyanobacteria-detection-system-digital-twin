@@ -1,0 +1,14 @@
+# Sensitivity run: crp_chla_pooled with every year since 1995 instead of since 2014.
+extends: crp_chla_pooled
+description: >-
+  Sensitivity run of crp_chla_pooled with labels from 1995 on. Same stations, targets,
+  features and settings; only the start date differs.
+start: "1995-01-01"
+reference_probe: null               # the probe used labels since 2014 only
+notes:
+  - >-
+    The era differs: labels before 2014 are mostly below 10 ug/L, so the older training rows
+    describe a different regime from the test years.
+  - >-
+    Year is not a feature. No model here can represent that change of era, and seasonal
+    climatology averages over it.

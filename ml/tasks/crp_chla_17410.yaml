@@ -1,0 +1,9 @@
+# Single-station copy of crp_chla_pooled (no station one-hot: the task has one station).
+# Very few positives per fold are expected; the warnings are part of the result.
+extends: crp_chla_pooled
+description: >-
+  Chlorophyll-a at CRP station 17410 only. Primary target: the event chlorophyll_a >= 10 ug/L
+  on the sample date. Secondary: the concentration (log1p regression).
+data:
+  stations: ["17410"]
+reference_probe: null               # the probe numbers are for the pooled task only

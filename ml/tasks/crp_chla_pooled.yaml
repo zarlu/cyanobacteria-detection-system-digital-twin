@@ -1,0 +1,40 @@
+# Headline task: chlorophyll-a at three Rio Grande CRP stations, pooled, with a station one-hot.
+extends: _crp_base
+description: >-
+  Chlorophyll-a at CRP stations 13202, 15816 and 17410, pooled. Primary target: the event
+  chlorophyll_a >= 10 ug/L on the sample date. Secondary: the concentration (log1p regression).
+  Features are same-visit readings (a nowcast), not a multi-day forecast.
+data:
+  stations: ["13202", "15816", "17410"]
+target:
+  channel: chlorophyll_a
+  unit: ug/L
+  event_threshold: 10               # ug/L, the alert level in CLAUDE.md section 8
+  left_censored_factor: 0.5         # a "<x" label is stored as x / 2 for the regression target
+  regression: {transform: log1p}
+targets: [event, regression]        # the first is the primary target
+use_feature_sets: [sensor_like, sensor_like_prev, lab_same_visit]
+
+# Sanity range from an independent exploratory probe (outside the repo; fixed settings, no
+# tuning; walk-forward 2018 to 2026 with NO final hold-out, so its folds differ from ours).
+# Not a target: nothing is tuned to match it.
+reference_probe:
+  note: >-
+    independent probe: 131 labels, walk-forward by calendar year over test years 2018 to 2026,
+    no final hold-out, 93 out-of-sample labels, 32 positives
+  tolerance: 0.10
+  must_check: [persistence, seasonal_climatology]
+  event:
+    metric: pr_auc
+    values:
+      persistence: 0.396
+      seasonal_climatology: 0.865
+      logistic@sensor_like: 0.857
+      random_forest@sensor_like: 0.901
+  regression:
+    metric: mae
+    values:
+      persistence: 9.98
+      seasonal_climatology: 5.80
+      ridge@sensor_like: 6.31
+      random_forest@sensor_like: 5.61
