@@ -1,0 +1,34 @@
+# Demo task: the model that the real-data demo loop registers, forecasts with and scores.
+# Same stations, labels, splits and baselines as crp_chla_pooled. The one difference is the
+# feature set: only channels that exist in contract/channels.yaml, because the demo reads its
+# features from the database and /ingest stores contract channels only. Specific conductance
+# (channel crp_specific_conductance) is therefore NOT a feature here.
+extends: crp_chla_pooled
+description: >-
+  Chlorophyll-a at 19 CRP stations of segment 2304 (as given by the owner), pooled, with
+  features limited to channels of the data contract (water temperature, pH, discharge, air
+  temperature, season, station). This is the task behind the real-data demo loop. Primary
+  target: the event chlorophyll_a >= 10 ug/L on the sample date (a nowcast).
+feature_sets:
+  contract_channels:
+    deployable: true
+    extends: season
+    features:
+      - {name: water_temp, kind: channel, channel: water_temp}
+      - {name: ph, kind: channel, channel: ph}
+      - {name: log1p_discharge, kind: channel, channel: discharge, transform: log1p}   # m3/s
+      - {name: air_temp, kind: channel, channel: air_temp}
+      - {name: station, kind: station_onehot}
+use_feature_sets: [contract_channels]
+headline_feature_set: contract_channels
+# What `python -m ml.jobs train` registers. Fixed before this task was first run: random forest
+# had the highest walk-forward PR-AUC of the four models in crp_chla_pooled (2026-11-10 report).
+deploy:
+  algorithm: random_forest
+  feature_set: contract_channels
+  node_prefix: "crp-"               # node_id = node_prefix + station
+  db_source: CRP
+  outlook:                          # seasonal outlook on the dashboard (station climatology)
+    months_ahead: 12
+    likely_probability: 0.5         # PLACEHOLDER: a month counts as a likely bloom month when
+                                    # at least half of the past samples near it were events

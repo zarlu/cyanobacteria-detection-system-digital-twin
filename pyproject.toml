@@ -26,6 +26,10 @@ ml = [
   "shap==0.54.1",
   "joblib==1.6.0",
   "openpyxl==3.1.5",
+  "matplotlib==3.11.2",
+  "scipy==1.18.1",
+  "xgboost==3.4.1",
+  "xlrd==2.0.2",
 ]
 
 [dependency-groups]
@@ -44,7 +48,7 @@ packages = ["api", "contract", "db", "sim", "dashboard"]
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-extend-exclude = ["sim_out", "data", "artifacts"]
+extend-exclude = ["sim_out", "/data", "artifacts"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "W", "UP", "B", "SIM"]

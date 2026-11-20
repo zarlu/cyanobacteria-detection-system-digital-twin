@@ -10,7 +10,7 @@ from streamlit.testing.v1 import AppTest
 from dashboard.helpers import BANNER_TEXT
 
 VIEWS = Path(__file__).resolve().parents[2] / "dashboard" / "views"
-PAGES = sorted(p.name for p in VIEWS.glob("*.py"))
+PAGES = ["live_signals.py", "overview.py"]  # the views that plot raw observations
 
 
 def _run(page: str, api_url: str, monkeypatch: pytest.MonkeyPatch, timeout: float = 60) -> AppTest:
@@ -28,8 +28,39 @@ def _texts(at: AppTest) -> str:
     return "\n".join(str(c) for c in chunks)
 
 
+ALL_PAGES = sorted(p.name for p in VIEWS.glob("*.py"))
+ML_PAGES = ["bloom_timeline.py", "model_benchmarks.py"]
+
+
 def test_pages_exist() -> None:
+    assert ALL_PAGES == [
+        "bloom_timeline.py",
+        "live_signals.py",
+        "model_benchmarks.py",
+        "overview.py",
+    ]
     assert PAGES == ["live_signals.py", "overview.py"]
+
+
+def test_bloom_timeline_on_empty_database_says_what_to_run(empty_api, monkeypatch) -> None:
+    at = _run("bloom_timeline.py", empty_api.url, monkeypatch)
+    assert not at.exception, [e.value for e in at.exception]
+    assert "No champion model registered yet" in _texts(at)
+
+
+def test_model_benchmarks_shows_the_committed_report(empty_api, monkeypatch) -> None:
+    at = _run("model_benchmarks.py", empty_api.url, monkeypatch)
+    assert not at.exception, [e.value for e in at.exception]
+    labels = [m.label for m in at.metric]
+    assert "test labels" in labels and "report" in labels
+    assert "nothing recomputed" in _texts(at)
+
+
+@pytest.mark.parametrize("page", ML_PAGES)
+def test_ml_page_handles_api_down(page: str, monkeypatch) -> None:
+    at = _run(page, "http://127.0.0.1:9", monkeypatch)
+    assert not at.exception, [e.value for e in at.exception]
+    assert "Could not load data from the API" in _texts(at) or "API down" in _texts(at)
 
 
 @pytest.mark.parametrize("page", PAGES)

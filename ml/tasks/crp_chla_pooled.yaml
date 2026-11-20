@@ -1,0 +1,31 @@
+# Headline task: chlorophyll-a at the CRP stations of segment 2304, pooled, station one-hot.
+# "Segment 2304" is as given by the repository owner on 2026-11-10 (all station workbooks in
+# data/raw/crp/ belong to it); station names and locations are PLACEHOLDER in this repo.
+extends: _crp_base
+description: >-
+  Chlorophyll-a at 19 CRP stations of segment 2304 (as given by the owner), pooled. Primary
+  target: the event chlorophyll_a >= 10 ug/L on the sample date. Secondary: the concentration
+  (log1p regression). Features are same-visit readings (a nowcast), not a multi-day forecast.
+data:
+  # every station file that has at least one good chlorophyll label since 2014. Not listed:
+  # 13194, 13205, 13206, 18795 (no label since 2014) and 13209, 13698, 15813 (no chlorophyll).
+  stations: ["13116", "13196", "13200", "13202", "13208", "13560", "15274", "15340", "15814", "15815", "15817", "15839", "17410", "17596", "18792", "20650", "20997", "20999", "21542"]
+target:
+  channel: chlorophyll_a
+  unit: ug/L
+  event_threshold: 10               # ug/L, the alert level in CLAUDE.md section 8
+  left_censored_factor: 0.5         # a "<x" label is stored as x / 2 for the regression target
+  regression: {transform: log1p}
+targets: [event, regression]        # the first is the primary target
+use_feature_sets: [sensor_like, sensor_like_prev, lab_same_visit]
+baselines:                          # station_climatology: season AND station, nothing else
+  event: [persistence, seasonal_climatology, station_climatology, base_rate]
+  regression: [persistence, seasonal_climatology, station_climatology]
+notes:
+  - >-
+    The stations differ: some have no label at or above 10 ug/L since 2014. A model that sees
+    the station one-hot can score those easy negatives, so station_climatology (season and
+    station, nothing else) is the baseline to beat, and the per-station slices matter.
+  - >-
+    More stations add labels, not independent evidence about one site: stations sampled on the
+    same day share the weather and the season, which is why the bootstrap resamples dates.

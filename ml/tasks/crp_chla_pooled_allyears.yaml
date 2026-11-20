@@ -1,0 +1,16 @@
+# Sensitivity run: crp_chla_pooled with every year since 1995 instead of since 2014.
+extends: crp_chla_pooled
+description: >-
+  Sensitivity run of crp_chla_pooled with labels from 1995 on. Same targets, features and
+  settings; the start date differs, and four stations that only have older labels join.
+start: "1995-01-01"
+data:
+  # the 19 stations of crp_chla_pooled plus 13194, 13205, 13206 and 18795 (labels before 2014)
+  stations: ["13116", "13194", "13196", "13200", "13202", "13205", "13206", "13208", "13560", "15274", "15340", "15814", "15815", "15817", "15839", "17410", "17596", "18792", "18795", "20650", "20997", "20999", "21542"]
+notes:
+  - >-
+    The era differs: the older training rows describe a different period from the test years,
+    and the set of stations sampled changes over time.
+  - >-
+    Year is not a feature. No model here can represent a change of era, and seasonal
+    climatology averages over it.

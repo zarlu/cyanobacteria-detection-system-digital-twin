@@ -81,3 +81,29 @@ class ApiClient:
                 "agg": agg,
             },
         )
+
+    def models(self, task: str | None = None) -> list[dict[str, Any]]:
+        return self._get("/models", {"task": task})
+
+    def benchmark_tasks(self) -> list[str]:
+        return self._get("/benchmarks")
+
+    def benchmarks(self, task: str) -> dict[str, Any]:
+        return self._get(f"/benchmarks/{task}")
+
+    def predictions(
+        self,
+        *,
+        node_id: str | None = None,
+        target: str | None = None,
+        model_version: str | None = None,
+    ) -> dict[str, Any]:
+        return self._get(
+            "/predictions", {"node_id": node_id, "target": target, "model_version": model_version}
+        )
+
+    def outlook(self, task: str, node_id: str) -> dict[str, Any]:
+        return self._get("/outlook", {"task": task, "node_id": node_id})
+
+    def simulate(self, task: str, node_id: str, seed: int) -> dict[str, Any]:
+        return self._get("/simulate", {"task": task, "node_id": node_id, "seed": seed})

@@ -7,7 +7,7 @@ import logging
 from fastapi import FastAPI
 
 from api import __version__
-from api.routers import channels, health, ingest, labels, nodes, observations, reach
+from api.routers import channels, health, ingest, labels, ml, nodes, observations, reach
 from api.settings import Settings
 from db.engine import init_db, make_engine, make_session_factory
 from db.seed import seed_all
@@ -38,7 +38,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.settings = settings
     app.state.engine = engine
     app.state.session_factory = session_factory
-    for r in (health, ingest, nodes, channels, reach, observations, labels):
+    for r in (health, ingest, nodes, channels, reach, observations, labels, ml):
         app.include_router(r.router)
     log.info("app created (db=%s)", settings.db_url)
     return app

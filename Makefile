@@ -10,8 +10,10 @@ DASH_PORT ?= 8501
 API_URL ?= http://localhost:$(API_PORT)
 DEMO_DB := sqlite:///data/demo.db
 DEMO_DAYS ?= 60
+REAL_DB := sqlite:///data/demo_real.db
+REAL_TASK ?= crp_chla_demo
 
-.PHONY: setup setup-ml test test-e2e lint fmt api sim dash demo stop reset-db reproduce help
+.PHONY: setup setup-ml test test-e2e lint fmt api sim dash demo demo-real stop reset-db reproduce help
 
 help: ## list targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-12s %s\n", $$1, $$2}'
@@ -69,6 +71,30 @@ demo: ## one-command demo: fresh demo DB, API in background, summer_bloom backfi
 	@echo ""
 	@echo "API:       $(API_URL)/docs"
 	@echo "Dashboard: http://localhost:$(DASH_PORT)"
+	@echo "Stop with: make stop"
+
+demo-real: ## real-data demo: fresh DB, API, CRP samples via /ingest, train + forecast, dashboard (needs make setup-ml and data/clean/crp_long.csv)
+	@$(MAKE) stop
+	@test -f data/clean/crp_long.csv || { echo "data/clean/crp_long.csv not found: put the CRP workbooks in data/raw/crp/ and run '$(RUN) python -m ml.data.crp clean'"; exit 1; }
+	@if curl -sf $(API_URL)/health > /dev/null 2>&1; then \
+	  echo "something already answers on $(API_URL); stop it or run with API_PORT=<other>"; exit 1; fi
+	@mkdir -p .run data
+	@DB_URL=$(REAL_DB) $(RUN) python -m db.reset
+	@echo "starting API on port $(API_PORT) (log: .run/api.log) ..."
+	@DB_URL=$(REAL_DB) nohup $(RUN) uvicorn api.app:create_app --factory --host 127.0.0.1 --port $(API_PORT) > .run/api.log 2>&1 & echo $$! > .run/api.pid
+	@i=0; until curl -sf $(API_URL)/health > /dev/null 2>&1; do \
+	  i=$$((i+1)); if [ $$i -gt 60 ]; then echo "API did not start; see .run/api.log"; $(MAKE) stop; exit 1; fi; sleep 0.5; done
+	@echo "API healthy. Loading the CRP samples through /ingest (log: .run/crp_load.log) ..."
+	@$(RUN) python -m connectors.crp --api-url $(API_URL) > .run/crp_load.log 2>&1 || { echo "CRP load failed; see .run/crp_load.log"; $(MAKE) stop; exit 1; }
+	@echo "Training and registering the model for $(REAL_TASK) ..."
+	@DB_URL=$(REAL_DB) $(RUN) python -m ml.jobs train --task $(REAL_TASK)
+	@echo "Storing nowcasts ..."
+	@DB_URL=$(REAL_DB) $(RUN) python -m ml.jobs forecast --task $(REAL_TASK)
+	@echo "starting dashboard on port $(DASH_PORT) (log: .run/dash.log) ..."
+	@API_URL=$(API_URL) nohup $(RUN) streamlit run dashboard/app.py --server.port $(DASH_PORT) --server.headless true > .run/dash.log 2>&1 & echo $$! > .run/dash.pid
+	@echo ""
+	@echo "API:       $(API_URL)/docs"
+	@echo "Dashboard: http://localhost:$(DASH_PORT)  (pages: Bloom timeline, Model benchmarks)"
 	@echo "Stop with: make stop"
 
 stop: ## stop the demo API and dashboard (safe when nothing is running)
