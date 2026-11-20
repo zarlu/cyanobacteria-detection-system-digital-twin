@@ -223,3 +223,270 @@ restored, passed. (e) simulator determinism: `SeedSequence(seed)` -> `SeedSequen
 ## Blockers
 
 None so far.
+
+## Phase 4a: real CRP data (recorded 2026-11-09)
+
+Decisions for `ml/data/crp.py` (inspect, clean, manifest, verify). Scope for this task was set by
+the repository owner: `ml/data/`, `tests/ml/`, `docs/crp_schema.md` and this file (append only).
+
+- **Sample time convention.** CRP dates have no time of day. Each is stored as that date at
+  **18:00:00 UTC** (about midday US Central; the real sample time is unknown) with
+  `meta.date_only=true`. Set in `ml/data/crp_mapping.yaml` (`date.stored_time_utc`).
+- **Two-digit years:** yy >= 70 is 19yy, otherwise 20yy (PLACEHOLDER pivot in the mapping; the
+  three files span 1995 to 2026).
+- **Real data supports "predict the next sample", not a 7-day forecaster.** Nothing is
+  interpolated, resampled or synthesized between samples; every row has `source='CRP'`.
+- **Units.** Specific conductance: the header says S/cm, values are stored as uS/cm (middle of the
+  data is roughly 600 to 1300; see `docs/crp_schema.md`). Flow: ft3/s x 0.0283168 = m3/s, original
+  unit in `meta.original_unit`, original number in `value_raw`. Ortho-phosphorus stays
+  `crp_ortho_phosphorus` with basis PLACEHOLDER (not mapped to `phosphate_po4`). Kjeldahl-N and
+  the two bacteria columns have unit PLACEHOLDER. Lab TDS is `crp_tds_lab`, not the sensor `tds`.
+- **Kind.** `chlorophyll_a` and `total_phosphorus` are `label`; every other CRP column is
+  `measurement`, including `discharge` and `air_temp` (the contract's default kind for those two
+  channels is `external`, which describes IBWC gauge and weather feeds, not a grab-sample reading).
+- **Censored values.** Left-censored (`<x`): `value = x / 2`, `detection_limit = x`,
+  `censored=left`. Right-censored (`>x`): `value = x`, `detection_limit = x`, `censored=right`
+  (the brief defined only the left case). `value_raw` always keeps the original text. A `<10`
+  chlorophyll label therefore counts as below the 10 ug/L event level.
+- **Screening rules** (`ml/data/crp_qc.yaml`, all PLACEHOLDER heuristics): range checks compare the
+  number as written in the file and apply to plain numeric cells only, not censored ones. A flag
+  sets `quality='suspect'` and keeps the value; `bad` is never assigned by this task.
+- **Out-of-sequence dates:** a row is quarantined when its date lies outside
+  [previous row, next row] while previous <= next. The first and last row of a file have one
+  neighbour and are never quarantined by this rule; any remaining order break is listed in the
+  report. No year is ever guessed.
+- **Duplicate blocks** are compared within one station only; the block on the later date is
+  flagged. A quarantined out-of-sequence row is still compared, for the report.
+- **Same-date merge:** the first row's value wins. A different value on a later row goes to
+  `crp_quarantine.csv` (`conflicting_duplicate`); an identical value goes there too
+  (`duplicate_same_value`) so that every parsed cell is accounted for exactly once.
+- **Extra output columns** beyond the brief, agreed with the owner: `crp_long.csv` has a trailing
+  `meta` column (JSON: `date_only`, `original_unit`); `crp_quarantine.csv` has `column`,
+  `value_raw` and `n_cells` so a single quarantined value and the conservation check are
+  expressible.
+- **Text cells on a quarantined row** are recorded in `crp_notes.csv` like any other text cell;
+  the quarantine entry counts only its numeric and censored cells.
+- **Corrections** (`ml/data/crp_corrections.yaml`, empty) are human decisions, not QC:
+  `confirm_ok` and `replace` set `quality='good'` with `flag_reason` `confirmed_ok` / `corrected`
+  (`value_raw` keeps the file text); `drop` moves the value to the quarantine file. An entry
+  without evidence, or one that matches no value, stops the run.
+- **Profile** (`data/clean/crp_profile.json`): `quality='good'` rows only; censored values enter at
+  their stored value; "pooled" is all stations together and pooled gaps are the per-station gaps
+  concatenated; percentiles use linear interpolation between order statistics (a statistic of the
+  observed values, not interpolation between samples); a cell with n < 5 is null.
+- **File-name check** ignores hidden dot-files (for example `.DS_Store`) in `data/raw/crp/`.
+- **xlrd not needed:** `data/raw/crp/` holds only CSV files, so `pyproject.toml` is unchanged.
+  The `.xlsx` path uses openpyxl (ML extra); its test is skipped when openpyxl is not installed.
+- **`.gitignore` line `data/` also matches `ml/data/`.** The owner chose not to edit `.gitignore`
+  in this task, so the `ml/data/` files are committed with `git add -f`. Consequences until the
+  line becomes `/data/`: new files in `ml/data/` need `git add -f`, and `make lint` (ruff respects
+  `.gitignore`) does not check `ml/data/*.py`; run `uv run ruff check ml/data/*.py` explicitly.
+- **Reference count not reproduced:** the brief expected 15 of 21 rows dated 2025 or later at
+  15816 without field readings. The file has 11 rows dated 2025 or later (lines 171 to 181), 5 of
+  them without numeric water temp, pH or flow. Neither side was adjusted.
+
+Blockers (Phase 4a): none.
+
+## Phase 4b: ML harness and the CRP tasks (2026-11-10)
+
+Branch `feat/p4b-ml-harness`, created from `feat/p4a-crp-data` (4a was not merged).
+
+- **Dependencies.** The `ml` extra was not installed in the shared environment; `uv sync --extra ml`
+  installed it. Two exact pins were added to the `ml` extra in `pyproject.toml`: `scipy==1.18.1`
+  (the version scikit-learn 1.9.1 already resolved to) and `matplotlib==3.11.2`. On macOS LightGBM
+  also needs the system OpenMP runtime: `brew install libomp` (not a Python package, so it cannot
+  be pinned in `pyproject.toml`; it belongs in the README setup notes, which this task may not edit).
+- **Tests that need the `ml` extra** (`tests/ml/test_models.py`, `test_drills.py`, `test_run.py`)
+  are skipped with `pytest.importorskip` when scikit-learn, LightGBM or matplotlib is missing, as
+  4a did for openpyxl. After `make setup` alone they skip; after `make setup-ml` they run.
+- **Task specs use `extends`.** `ml/tasks/_crp_base.yaml` (marked `abstract`) holds the shared
+  settings; a task file merges over it (dicts merge, lists and scalars are replaced). A task's
+  `fast:` block is merged over it only for `--fast`. This is loader behaviour, not task logic.
+- **Seasonal climatology widens CLAUDE.md's "same month".** It is the mean of the training
+  targets whose calendar month is within plus or minus one month of the test month (December and
+  January are adjacent), because there are only about two or three labels per station and
+  calendar month. With fewer than 3 training labels in the window it is the mean of all training
+  targets. It is pooled over the task's stations (not per station) for the same reason.
+- **Climatology for regression targets** is the mean on the transformed (log1p) scale,
+  back-transformed, so it is on the same footing as the models, which are fitted on that scale.
+- **Persistence uses the latest label known at issue time**, including a label that falls inside
+  the test year or inside the 14-day gap: "the last sample at this station, carried forward". The
+  gap restricts what a model may be trained on, not what the baseline may look at. The same holds
+  for the `prev_label_*` features. This assumes the previous sample's lab result is back before
+  the next visit (visits are 56 to 112 days apart); the lab turnaround time is a PLACEHOLDER.
+- **Labels before `start` are not used at all**, not even as a "previous label".
+- **Total phosphorus targets use log1p** ("regression on the log scale" in the brief; CLAUDE.md
+  section 8 says log1p for concentrations). Feature transforms follow the brief: `log` for
+  specific conductance, total phosphorus and TSS; `log1p` for discharge and the previous label.
+- **Censored values.** A left-censored target enters the regression at detection limit / 2 with
+  a `censored` flag, and metrics are reported on all labels and on numeric-only labels. For the
+  event target, `<x` with x <= threshold is a negative and `<x` with x > threshold is dropped
+  (counted in the report). A right-censored target is dropped from both targets and counted
+  (the brief defined this for chlorophyll; total phosphorus is treated the same way). A censored
+  value in a *feature* channel (for example total phosphorus `<0.05` in `lab_same_visit`) enters
+  at its stored value, detection limit / 2.
+- **Regression predictions are clipped at zero** concentration before any metric is computed.
+- **Final hold-out size** is `ceil(final_holdout_frac * distinct dates)` dates. The calendar year
+  that contains the hold-out start is a partial walk-forward test fold (its dates before the
+  hold-out start).
+- **Missing-indicator columns** are decided per fold from the missing pattern of the training and
+  test rows; the medians come from the training rows only. A feature that is entirely missing in
+  a training fold is filled with 0 (its indicator carries the information).
+- **Bootstrap intervals** are plain percentile intervals over 1000 resamples of distinct dates
+  (seed 7). A metric that is undefined on a resample (PR-AUC without positives) is left out of
+  that metric's percentiles; `n_boot_defined` in `metrics.json` says how many were used.
+- **Verdict for event tasks** is decided by PR-AUC; the Brier difference and its interval are
+  printed next to it and can disagree.
+- **Shuffled-label drill.** Event: mean PR-AUC over 5 seeds against the base rate of the
+  out-of-sample labels, margin 0.10 (PLACEHOLDER), exactly as in the brief. Regression (not
+  specified in the brief): mean MAE skill against the training-mean predictor on the transformed
+  scale, same margin. The first version used the training median; it was changed after the first
+  full run because a squared-loss model fitted on shuffled targets estimates the training mean,
+  and on these tasks the mean scores better than the median without any model (for example
+  crp_chla_17410: MAE 0.873 against 0.990, log scale, ad hoc check), which raised flags.
+- **The event rule of the shuffled-label drill raises false alarms on small samples.** PR-AUC of
+  a ranking that ignores the labels is above the base rate when there are few labels (ad hoc
+  check: 0.403 against a base rate of 0.368 at n = 68; 0.686 against 0.571 at n = 7), and five
+  seeds are a noisy mean. The first full run printed LEAKAGE SUSPECTED on 5 of 7 tasks. A 30-seed
+  ad hoc check found mean shuffled-label ROC-AUC at or below 0.5 for every model checked, so no
+  leakage was found. The rule and its margin were NOT changed (that is the owner's decision to make); the report now
+  prints the mean shuffled ROC-AUC and the label-blind expected PR-AUC next to every flag.
+- **Leaky-feature guard** is the truncation check: `assert_no_future_dependence` raises when a
+  feature changes after later rows are removed. The leaky feature (next sample's target) exists
+  only inside `tests/ml/test_drills.py`.
+- **Conformal intervals** use the absolute walk-forward residuals on the transformed scale and
+  are applied to the hold-out predictions; coverage is counted there. Fewer than 30 residuals
+  (PLACEHOLDER) prints a note.
+- **Permutation importance** is the drop in pooled walk-forward PR-AUC (event) or the rise in
+  log-scale MAE (regression) when one raw feature is shuffled within each fold's test rows,
+  5 repeats, nothing refit. SHAP was not built (first item on the cut list).
+- **"Last two calendar years"** in the feature-availability table are the last two calendar years
+  that have labels in the task (2025 and 2026 today), not the wall-clock date.
+- **`--fast` runs** are written to `<UTC-date>-FAST/` so they never overwrite a real report.
+- **`metrics.json` holds no timestamp**, so two runs on the same inputs are byte-identical; the
+  UTC date is only in the folder name.
+- **`ml/__init__.py` was added** (docstring only) so `ml` is a regular package.
+
+Blockers (Phase 4b): none.
+
+### Addition after the first 4b run (2026-11-10): XGBoost
+
+- **XGBoost added to the ladder at the owner's request**, after LightGBM, for event and regression
+  targets. Exact pin `xgboost==3.4.1` in the `ml` extra. Settings fixed before any result was
+  seen and not tuned: `max_depth=3, n_estimators=200, learning_rate=0.05`, seed 7 (PLACEHOLDER
+  choices, in `ml/tasks/_crp_base.yaml`). CLAUDE.md section 8 still lists the ladder without
+  XGBoost; that file changes only through a pull request.
+- **The committed reports dated 2026-11-10 were produced before XGBoost was added** and do not
+  contain it. They are replaced when the tasks are re-run on the new data.
+
+## Phase 4a and 4b again: 26 new station files (2026-11-10)
+
+- **New raw files.** The owner added 24 Excel workbooks to `data/raw/crp/` (22 `.xls`, 2 `.xlsx`).
+  With `15816.csv` kept, the folder holds 27 station files. Exact pin `xlrd==2.0.2` added to the
+  `ml` extra to read `.xls`.
+- **Two files in the raw folder were moved, one renamed** (nothing deleted): `13202.csv` and
+  `17410.csv` went to `data/raw/crp_superseded/` because the new `13202.xls` and `17410.xls`
+  hold the same data (identical station/date/channel rows, quality and censoring; 21 discharge
+  values at 13202 differ only by display rounding, for example 1515 against 1514.999343).
+  `15815 (1).xls` was renamed `15815.xls` so it matches the file pattern.
+- **Workbooks with several sheets:** only the sheet named `Sheet1` is data
+  (`excel.data_sheet` in `crp_mapping.yaml`). The other sheets (E. coli and TDS chart tables,
+  empty sheets) are not read. A workbook with several sheets and no `Sheet1` stops the run.
+- **13208.xls has a second full data sheet, `Modified`** (dated rows to 2023-01-23, 25 dates that
+  `Sheet1` lacks; `Sheet1` runs to 2026-01-20 and has 6 dates that `Modified` lacks). `Sheet1` is
+  used. Which sheet is right is an open question for the owner; no task uses station 13208.
+  `15274.xls` also has a second, shorter sheet with one extra column; `Sheet1` is used.
+- **Header spelling variants** are aliases in the mapping: `Hardness` (total hardness),
+  `NO3 + NO2` (nitrate + nitrite), `Ortho-Phosphorous` (ortho-phosphorus).
+- **Three order breaks are not resolved by the quarantine rule** and are listed in the cleaning
+  report (13200 line 201, 13208 line 110, 15815 line 215): a run of rows whose dates step back,
+  so no single row is the outlier. The rows are kept. No year is guessed.
+- **Station names and locations of the new stations are unknown to this repo** (PLACEHOLDER,
+  CLAUDE.md rule 10); they have no entry under `stations:` in the mapping yet.
+- **Hand-checked expectations in `tests/ml/test_crp_real_data.py`** stay exact but are scoped to
+  the three reference stations (13202, 15816, 17410); the conservation test covers every file.
+- **New task `crp_chla_pooled_plus`** pools the three original stations with 21542 (named in the
+  4b brief) and 13196 and 13200 (named in CLAUDE.md section 11). No other new station is in any
+  task: which stations belong to the study reach is the owner's decision. Pooling stations with
+  no blooms at all (13208, 13560 and 15340 have 0 labels at or above 10 ug/L since 2014) would
+  let a station one-hot score easy negatives and make every model look better without any gain
+  at the sites that matter.
+- **All reports under `ml/reports/` were regenerated** on the new clean file with XGBoost. The
+  three-station tasks give the same numbers as before for every predictor that existed before.
+
+## Segment 2304 pool (2026-11-10, owner's instructions)
+
+- **Owner's statements, recorded as given:** every station workbook now in `data/raw/crp/` is
+  from segment 2304; the three CSV files delivered first are no longer used.
+- **Files removed.** `13202.csv` and `17410.csv` (duplicates of the workbooks) were deleted.
+  `15816.csv` has no workbook counterpart, so it is the only copy of station 15816 (60 good
+  chlorophyll labels since 2014, 22 at or above 10 ug/L, the most of any station). It was taken
+  out of `data/raw/crp/` and is no longer read, but it was moved to `data/raw/crp_superseded/`
+  instead of deleted, until the owner confirms the permanent delete.
+- **Tasks now pool 19 stations**: every station file with at least one good chlorophyll label
+  since 2014. `crp_chla_15816` and `crp_chla_pooled_plus` were removed. The reference-probe
+  comparison was removed with them (it described the three-station pool).
+- **New baseline `station_climatology`** in pooled tasks: the seasonal climatology of the same
+  station (same month window; with fewer than 3 such training labels, the pooled value). The
+  stations differ a lot (several have no label at or above 10 ug/L since 2014), and the models
+  see a station one-hot, so a model can beat the pooled seasonal climatology by knowing the
+  station alone. The verdict lines print both baselines.
+- **`crp_chla_pooled_allyears` is no longer informative as a walk-forward test.** With labels
+  from 1995 the last 20% of distinct dates start in 2018, so the hold-out takes almost every
+  test year and one walk-forward fold with 5 labels and no positive is left. Its hold-out
+  numbers stand; the settings were not changed to work around it.
+- **Permutation importance is undefined** (null) when the walk-forward set has no positives;
+  the report prints "undefined".
+
+## Real-data demo loop (2026-11-12)
+
+Built at the owner's request for a same-day demo: CRP samples in the database, model benchmarks
+and a bloom timeline on the dashboard.
+
+- **Demo task `crp_chla_demo`.** Same stations, labels, splits and baselines as
+  `crp_chla_pooled`; features limited to channels of `contract/channels.yaml` (water
+  temperature, pH, discharge, air temperature, season, station). Specific conductance is not a
+  contract channel, so `/ingest` cannot store it and the demo model does not use it. The
+  contract was not changed.
+- **Loader `python -m connectors.crp`.** Posts only contract channels through `/ingest`
+  (`source='CRP'`, node `crp-<station>`); rows on other channels are counted and skipped.
+  Censoring travels in `meta.censored` and `meta.detection_limit`. Server QC may downgrade a
+  row the clean file calls good (the contract's valid ranges are PLACEHOLDERs).
+- **Champion choice.** `deploy.algorithm: random_forest` was fixed in the YAML before the task
+  was run, from the walk-forward results of `crp_chla_pooled`. The first model of a task is
+  registered as champion because there is nothing to compare it with; the promotion rule of
+  CLAUDE.md section 8 is not built yet.
+- **Stored model.** Trained on the training rows of the final hold-out fold, read from the
+  database. Registry metrics are copied from the harness report; the train job writes into
+  `models.notes` whether the database fold matches the report's fold.
+- **Predictions are nowcasts.** `issued_at = valid_at` = the visit time, `horizon_h = 0`.
+  `persistence-v1` is stored at the same issue times. The regression interval uses the
+  split-conformal half-width from the report.
+- **Bloom timeline = seasonal outlook.** `GET /outlook` lays the station climatology baseline
+  over the next 12 calendar months and names the first run of months at or above
+  `deploy.outlook.likely_probability` (0.5, PLACEHOLDER). It is a statement about the calendar
+  from past labels: a new sensor reading does not move it. A sensor-driven lead-time forecast
+  would need a task whose target is the next sample, backtested like the others; not built.
+- **Not built yet:** scorecard join, alert rule, bench actuator, promotion job, simulator ML
+  tasks. `GET /benchmarks` and `GET /outlook` are additions to the API table of CLAUDE.md
+  section 7 (CLAUDE.md itself is unchanged; it changes only through a PR).
+
+## Demo additions (2026-11-12, later the same day)
+
+- **Every model is registered and forecast.** The train job fits all algorithms of the task
+  (one `models` row each: `deploy.algorithm` is the champion, the rest are candidates kept for
+  the side-by-side view). The forecast job stores all of them plus `persistence-v1` and
+  `station-climatology-v1`.
+- **"Top-ranked", not "winner".** The Bloom timeline ranks predictors by walk-forward PR-AUC
+  from the report and repeats the report's verdict against station climatology. When that
+  verdict is "no demonstrable difference", the page says the model leads the ranking without
+  being a proven winner.
+- **Simulate a reading (`GET /simulate`).** One random value per input channel, drawn between
+  the 5th and 95th percentile of the station's stored good readings, dated today, labeled
+  `source='simulator'`, never stored. It shows how the models respond to inputs; it is not
+  evidence about the river.
+- **Dashboard look.** Light theme in `.streamlit/config.toml`, shared CSS and chart styling in
+  `dashboard/ui.py`, Material icons in place of emojis. The font (Fira Sans) loads from Google
+  Fonts and falls back to the system font offline.
+- **Overview.** Nodes that only hold rows loaded from files (role `unknown`) are counted in a
+  caption instead of getting a card each.

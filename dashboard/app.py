@@ -11,8 +11,20 @@ VIEWS = Path(__file__).parent / "views"
 st.set_page_config(page_title="Cyanobacteria Detection System Digital Twin", layout="wide")
 page = st.navigation(
     [
-        st.Page(str(VIEWS / "overview.py"), title="Overview", icon="🏠", default=True),
-        st.Page(str(VIEWS / "live_signals.py"), title="Live signals", icon="📈"),
+        st.Page(
+            str(VIEWS / "overview.py"), title="Overview", icon=":material/dashboard:", default=True
+        ),
+        st.Page(str(VIEWS / "live_signals.py"), title="Live signals", icon=":material/show_chart:"),
+        st.Page(
+            str(VIEWS / "bloom_timeline.py"),
+            title="Bloom timeline",
+            icon=":material/event_upcoming:",
+        ),
+        st.Page(
+            str(VIEWS / "model_benchmarks.py"),
+            title="Model benchmarks",
+            icon=":material/leaderboard:",
+        ),
     ]
 )
 page.run()

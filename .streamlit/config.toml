@@ -1,0 +1,11 @@
+# Dashboard theme (light, minimal). Colors are also used by dashboard/ui.py for the charts.
+[theme]
+base = "light"
+primaryColor = "#1E293B"
+backgroundColor = "#F8FAFC"
+secondaryBackgroundColor = "#EEF2F6"
+textColor = "#0F172A"
+font = "sans serif"
+
+[client]
+toolbarMode = "minimal"
